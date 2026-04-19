@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --beige-50:  #FAF7F2;
+  --beige-100: #F2EBE0;
+  --beige-200: #E8DCC8;
+  --beige-300: #D9C9AB;
+  --beige-400: #C9A97A;
+  --beige-500: #B8904F;
+  --beige-600: #9A7340;
+  --beige-700: #7A5A32;
+  --beige-800: #5C4124;
+  --beige-900: #3D2B17;
+  --brown:     #2C1F0E;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-beige-50:  var(--beige-50);
+  --color-beige-100: var(--beige-100);
+  --color-beige-200: var(--beige-200);
+  --color-beige-300: var(--beige-300);
+  --color-beige-400: var(--beige-400);
+  --color-beige-500: var(--beige-500);
+  --color-beige-600: var(--beige-600);
+  --color-beige-700: var(--beige-700);
+  --color-beige-800: var(--beige-800);
+  --color-beige-900: var(--beige-900);
+  --color-brown:     var(--brown);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--beige-50);
+  color: var(--brown);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--beige-300);
+  color: var(--brown);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--beige-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--beige-400);
+  border-radius: 3px;
 }

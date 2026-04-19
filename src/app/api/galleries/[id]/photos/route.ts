@@ -1,0 +1,60 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { uploadToR2 } from "@/lib/r2";
+import sharp from "sharp";
+
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id: galleryId } = await params;
+
+  const gallery = await prisma.gallery.findUnique({ where: { id: galleryId } });
+  if (!gallery) return NextResponse.json({ error: "Gallery not found" }, { status: 404 });
+
+  const formData = await req.formData();
+  const files = formData.getAll("files") as File[];
+
+  if (!files.length) return NextResponse.json({ error: "No files" }, { status: 400 });
+
+  const lastPhoto = await prisma.photo.findFirst({
+    where: { galleryId },
+    orderBy: { sortOrder: "desc" },
+  });
+  let sortOrder = (lastPhoto?.sortOrder ?? -1) + 1;
+
+  const uploaded = [];
+
+  for (const file of files) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const baseName = `${galleryId}/${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    const originalKey = `originals/${baseName}.${ext}`;
+    const previewKey = `previews/${baseName}.webp`;
+
+    const previewBuffer = await sharp(buffer)
+      .resize({ width: 1400, withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
+
+    await uploadToR2(originalKey, buffer, file.type || "image/jpeg");
+    await uploadToR2(previewKey, previewBuffer, "image/webp");
+
+    const photo = await prisma.photo.create({
+      data: {
+        galleryId,
+        originalKey,
+        previewKey,
+        filename: file.name,
+        sizeBytes: file.size,
+        sortOrder: sortOrder++,
+      },
+    });
+
+    uploaded.push(photo);
+  }
+
+  return NextResponse.json(uploaded);
+}

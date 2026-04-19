@@ -13,11 +13,11 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Folio — Фотогалереи",
-  description: "Персональный сервис для доставки фотографий клиентам",
+  title: "Folio — Fotogalerien",
+  description: "Professionelle Fotogalerien für Ihre Kunden. Von Andrii Golik.",
   openGraph: {
-    title: "Folio — Фотогалереи",
-    description: "Персональный сервис для доставки фотографий клиентам",
+    title: "Folio — Fotogalerien",
+    description: "Professionelle Fotogalerien für Ihre Kunden. Von Andrii Golik.",
     type: "website",
   },
 };
@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className={`${inter.variable} ${playfair.variable} h-full`}>
+    <html lang="de" className={`${inter.variable} ${playfair.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased" style={{ fontFamily: "var(--font-inter)" }}>
         {children}
       </body>

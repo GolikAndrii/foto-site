@@ -4,107 +4,82 @@ import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 
 const features = [
-  { icon: "◈", text: "Гalerien in Sekunden teilen" },
-  { icon: "◎", text: "Originals auf Abruf laden" },
-  { icon: "♡", text: "Kunden markieren Favoriten" },
+  { icon: <IconGrid />, text: "Galerien in Sekunden teilen" },
+  { icon: <IconDownload />, text: "Originale auf Abruf laden" },
+  { icon: <IconHeart />, text: "Kunden markieren Favoriten" },
 ];
 
 export default function HomePage() {
   return (
-    <main className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden select-none">
-      {/* Animated gradient background */}
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: [
-            "linear-gradient(135deg, #FAF7F2 0%, #EDE3D4 40%, #D9C9AB 100%)",
-            "linear-gradient(160deg, #F5EFE6 0%, #E8DCC8 45%, #C9A97A55 100%)",
-            "linear-gradient(135deg, #FAF7F2 0%, #EDE3D4 40%, #D9C9AB 100%)",
-          ],
-        }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
+    <main className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden select-none bg-[#0C0C0C]">
 
-      {/* Noise texture overlay */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        backgroundSize: "200px",
-      }} />
+      {/* Orange glow top-right */}
+      <div className="absolute top-[-160px] right-[-160px] w-[500px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle at center, rgba(255,107,0,0.12), transparent 70%)" }} />
 
-      {/* Large decorative circle top-right */}
-      <motion.div
-        className="absolute top-[-200px] right-[-200px] w-[600px] h-[600px] rounded-full"
-        style={{ background: "radial-gradient(circle at center, #C9A97A22, transparent 70%)" }}
-        animate={{ scale: [1, 1.06, 1], rotate: [0, 15, 0] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-      />
+      {/* Orange glow bottom-left */}
+      <div className="absolute bottom-[-120px] left-[-120px] w-[400px] h-[400px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle at center, rgba(255,107,0,0.07), transparent 70%)" }} />
 
-      {/* Medium circle bottom-left */}
-      <motion.div
-        className="absolute bottom-[-100px] left-[-100px] w-[400px] h-[400px] rounded-full"
-        style={{ background: "radial-gradient(circle at center, #B8904F18, transparent 70%)" }}
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-      />
+      {/* Subtle grid lines */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        style={{
+          backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }} />
 
-      {/* Thin lines decoration */}
-      <div className="absolute top-8 left-8 opacity-20">
+      {/* Corner decoration — top left */}
+      <div className="absolute top-8 left-8 flex flex-col gap-1.5 opacity-30">
         {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="w-px bg-[#C9A97A] mb-3"
-            initial={{ height: 0 }}
-            animate={{ height: 40 }}
-            transition={{ delay: 0.5 + i * 0.15, duration: 0.6 }}
-          />
+          <motion.div key={i} className="w-px bg-orange-500"
+            initial={{ height: 0 }} animate={{ height: 32 }}
+            transition={{ delay: 0.4 + i * 0.12, duration: 0.5 }} />
         ))}
       </div>
-      <div className="absolute bottom-8 right-8 opacity-20">
+
+      {/* Corner decoration — bottom right */}
+      <div className="absolute bottom-8 right-8 flex flex-col items-end gap-1.5 opacity-30">
         {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="h-px bg-[#C9A97A] ml-auto mb-2"
-            initial={{ width: 0 }}
-            animate={{ width: 40 }}
-            transition={{ delay: 0.7 + i * 0.15, duration: 0.6 }}
-          />
+          <motion.div key={i} className="h-px bg-orange-500"
+            initial={{ width: 0 }} animate={{ width: 32 }}
+            transition={{ delay: 0.6 + i * 0.12, duration: 0.5 }} />
         ))}
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-md">
+      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-sm">
 
         {/* Aperture icon */}
         <motion.div
-          initial={{ opacity: 0, rotate: -20 }}
-          animate={{ opacity: 1, rotate: 0 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="mb-6"
+          initial={{ opacity: 0, rotate: -30, scale: 0.8 }}
+          animate={{ opacity: 1, rotate: 0, scale: 1 }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
+          className="mb-8"
         >
           <ApertureIcon />
         </motion.div>
 
-        {/* Tag */}
+        {/* Label */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex items-center gap-3 mb-5"
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="flex items-center gap-3 mb-4"
         >
-          <div className="w-8 h-px" style={{ backgroundColor: "#C9A97A" }} />
-          <span className="text-[10px] tracking-[0.4em] uppercase" style={{ color: "#9A7340" }}>
+          <div className="w-8 h-px bg-orange-500/50" />
+          <span className="text-[10px] tracking-[0.45em] uppercase text-orange-500/70">
             Fotogalerien
           </span>
-          <div className="w-8 h-px" style={{ backgroundColor: "#C9A97A" }} />
+          <div className="w-8 h-px bg-orange-500/50" />
         </motion.div>
 
         {/* Title */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="text-7xl sm:text-8xl font-light leading-none mb-4 tracking-tight"
-          style={{ fontFamily: "var(--font-playfair)", color: "#2C1F0E" }}
+          transition={{ duration: 0.7, delay: 0.35 }}
+          className="text-8xl font-light leading-none mb-4 tracking-tight text-white"
+          style={{ fontFamily: "var(--font-playfair)" }}
         >
           Folio
         </motion.h1>
@@ -113,31 +88,30 @@ export default function HomePage() {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="text-sm leading-relaxed mb-8"
-          style={{ color: "#7A5A32", fontFamily: "var(--font-inter)", letterSpacing: "0.03em" }}
+          transition={{ duration: 0.7, delay: 0.5 }}
+          className="text-sm leading-relaxed mb-8 text-neutral-400"
+          style={{ fontFamily: "var(--font-inter)", letterSpacing: "0.03em" }}
         >
           Ihre Fotos. Ihre Kunden. Ganz einfach.
         </motion.p>
 
-        {/* Feature list */}
+        {/* Features */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.65 }}
-          className="flex flex-col gap-2 mb-10 w-full max-w-xs"
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="flex flex-col gap-2 mb-10 w-full"
         >
           {features.map((f, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 + i * 0.1 }}
-              className="flex items-center gap-3 text-left px-4 py-2.5 rounded-xl"
-              style={{ backgroundColor: "rgba(255,255,255,0.35)" }}
+              transition={{ delay: 0.65 + i * 0.1 }}
+              className="flex items-center gap-3 text-left px-4 py-3 rounded-xl border border-white/5 bg-white/[0.03]"
             >
-              <span className="text-base" style={{ color: "#C9A97A" }}>{f.icon}</span>
-              <span className="text-xs" style={{ color: "#5C4124", fontFamily: "var(--font-inter)" }}>{f.text}</span>
+              <span className="text-orange-500 shrink-0">{f.icon}</span>
+              <span className="text-sm text-neutral-300" style={{ fontFamily: "var(--font-inter)" }}>{f.text}</span>
             </motion.div>
           ))}
         </motion.div>
@@ -146,16 +120,17 @@ export default function HomePage() {
         <motion.button
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1 }}
-          whileHover={{ scale: 1.02, boxShadow: "0 12px 40px rgba(185,144,79,0.3)" }}
+          transition={{ duration: 0.5, delay: 1 }}
+          whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(255,107,0,0.25)" }}
           whileTap={{ scale: 0.98 }}
           onClick={() => signIn("google", { callbackUrl: "/admin" })}
-          className="flex items-center gap-3 px-8 py-4 rounded-full text-sm cursor-pointer transition-all w-full justify-center"
+          className="flex items-center gap-3 px-8 py-4 rounded-full text-sm cursor-pointer w-full justify-center font-medium transition-all"
           style={{
-            backgroundColor: "#2C1F0E",
-            color: "#FAF7F2",
+            background: "linear-gradient(135deg, #FF6B00, #FF8C33)",
+            color: "#fff",
             fontFamily: "var(--font-inter)",
             letterSpacing: "0.04em",
+            boxShadow: "0 4px 24px rgba(255,107,0,0.2)",
           }}
         >
           <GoogleIcon />
@@ -166,38 +141,41 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
+          transition={{ delay: 1.3 }}
           className="mt-8 flex flex-col items-center gap-1"
         >
-          <p className="text-[10px] tracking-widest uppercase" style={{ color: "#9A7340", opacity: 0.5 }}>
+          <p className="text-[10px] tracking-widest uppercase text-neutral-600">
             Nur für autorisierte Nutzer
           </p>
-          <p className="text-[10px]" style={{ color: "#9A7340", opacity: 0.4 }}>
-            © Andrii Golik
-          </p>
+          <p className="text-[10px] text-neutral-700">© Andrii Golik</p>
         </motion.div>
       </div>
     </main>
   );
 }
 
+const APERTURE_LINES = [0, 60, 120, 180, 240, 300].map((angle) => {
+  const rad = (angle * Math.PI) / 180;
+  return {
+    x1: Math.round((26 + 9 * Math.cos(rad)) * 1000) / 1000,
+    y1: Math.round((26 + 9 * Math.sin(rad)) * 1000) / 1000,
+    x2: Math.round((26 + 23 * Math.cos(rad + 0.4)) * 1000) / 1000,
+    y2: Math.round((26 + 23 * Math.sin(rad + 0.4)) * 1000) / 1000,
+  };
+});
+
 function ApertureIcon() {
   return (
     <motion.svg
-      width="44" height="44" viewBox="0 0 44 44" fill="none"
+      width="52" height="52" viewBox="0 0 52 52" fill="none"
       animate={{ rotate: 360 }}
       transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
     >
-      <circle cx="22" cy="22" r="20" stroke="#C9A97A" strokeWidth="1" strokeOpacity="0.5" />
-      <circle cx="22" cy="22" r="6" stroke="#C9A97A" strokeWidth="1.5" />
-      {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-        const rad = (angle * Math.PI) / 180;
-        const x1 = 22 + 8 * Math.cos(rad);
-        const y1 = 22 + 8 * Math.sin(rad);
-        const x2 = 22 + 19 * Math.cos(rad + 0.4);
-        const y2 = 22 + 19 * Math.sin(rad + 0.4);
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#C9A97A" strokeWidth="1" strokeOpacity="0.6" />;
-      })}
+      <circle cx="26" cy="26" r="24" stroke="#FF6B00" strokeWidth="1" strokeOpacity="0.25" />
+      <circle cx="26" cy="26" r="7" stroke="#FF6B00" strokeWidth="1.5" strokeOpacity="0.9" />
+      {APERTURE_LINES.map((l, i) => (
+        <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="#FF6B00" strokeWidth="1.2" strokeOpacity="0.5" />
+      ))}
     </motion.svg>
   );
 }
@@ -205,10 +183,38 @@ function ApertureIcon() {
 function GoogleIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="rgba(255,255,255,0.9)"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="rgba(255,255,255,0.9)"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="rgba(255,255,255,0.9)"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="rgba(255,255,255,0.9)"/>
+    </svg>
+  );
+}
+
+function IconGrid() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="1" y="1" width="6" height="6" rx="1" />
+      <rect x="9" y="1" width="6" height="6" rx="1" />
+      <rect x="1" y="9" width="6" height="6" rx="1" />
+      <rect x="9" y="9" width="6" height="6" rx="1" />
+    </svg>
+  );
+}
+
+function IconDownload() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M8 2v8M5 7l3 3 3-3" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M2 12h12" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function IconHeart() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M8 13.5S1.5 9.5 1.5 5.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14.5 5.5c0 4-6.5 8-6.5 8z" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }

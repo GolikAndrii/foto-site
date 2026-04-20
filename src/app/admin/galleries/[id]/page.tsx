@@ -88,8 +88,8 @@ export default function GalleryAdminPage() {
 
   if (!gallery) {
     return (
-      <div className="flex items-center justify-center py-32">
-        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#C9A97A", borderTopColor: "transparent" }} />
+      <div className="flex items-center justify-center py-40">
+        <div className="w-8 h-8 rounded-full border-2 border-orange-500/30 border-t-orange-500 animate-spin" />
       </div>
     );
   }
@@ -108,53 +108,121 @@ export default function GalleryAdminPage() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && saveName()}
-                className="text-2xl font-light border-b-2 outline-none bg-transparent px-1"
-                style={{ borderColor: "#C9A97A", color: "#2C1F0E", fontFamily: "var(--font-playfair)", minWidth: "200px" }}
+                className="text-2xl font-light border-b-2 outline-none bg-transparent px-1 text-white"
+                style={{ borderColor: "#FF6B00", fontFamily: "var(--font-playfair)", minWidth: "220px" }}
               />
-              <button onClick={saveName} className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: "#C9A97A", color: "#FAF7F2" }}>✓</button>
-              <button onClick={() => setEditingName(false)} className="text-sm px-3 py-1 rounded-full border" style={{ borderColor: "#D9C9AB", color: "#7A5A32" }}>✕</button>
+              <button
+                onClick={saveName}
+                className="text-sm px-3 py-1.5 rounded-lg font-medium"
+                style={{ background: "linear-gradient(135deg, #FF6B00, #FF8C33)", color: "#fff" }}
+              >
+                ✓
+              </button>
+              <button
+                onClick={() => setEditingName(false)}
+                className="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-neutral-400 hover:text-white"
+              >
+                ✕
+              </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-light" style={{ fontFamily: "var(--font-playfair)", color: "#2C1F0E" }}>{gallery.name}</h1>
-              <button onClick={() => { setNewName(gallery.name); setEditingName(true); }} className="opacity-40 hover:opacity-100 transition-opacity text-lg" style={{ color: "#7A5A32" }}>✎</button>
+            <div className="flex items-center gap-2 group">
+              <h1
+                className="text-3xl font-light text-white"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                {gallery.name}
+              </h1>
+              <button
+                onClick={() => { setNewName(gallery.name); setEditingName(true); }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-white/5 text-neutral-500 hover:text-neutral-300"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
             </div>
           )}
-          <p className="text-sm mt-1" style={{ color: "#9A7340" }}>{gallery.photos.length} фото</p>
+          <p className="text-sm mt-1 text-neutral-500" style={{ fontFamily: "var(--font-inter)" }}>
+            {gallery.photos.length} фото
+          </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={copyShareLink}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all"
-            style={{ backgroundColor: copied ? "#7A5A32" : "#2C1F0E", color: "#FAF7F2", fontFamily: "var(--font-inter)" }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: copied ? "rgba(255,107,0,0.15)" : "rgba(255,107,0,0.1)",
+              color: copied ? "#FF8C33" : "#FF6B00",
+              border: "1px solid",
+              borderColor: copied ? "rgba(255,140,51,0.4)" : "rgba(255,107,0,0.25)",
+              fontFamily: "var(--font-inter)",
+            }}
           >
-            {copied ? "✓ Скопировано!" : "🔗 Поделиться"}
+            {copied ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M2 7l3.5 3.5L12 3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Скопировано!
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M5 7a3 3 0 0 0 5.12 2.12l2-2a3 3 0 0 0-4.24-4.24L6.5 4.26" strokeLinecap="round"/>
+                  <path d="M9 7a3 3 0 0 0-5.12-2.12l-2 2a3 3 0 0 0 4.24 4.24L7.5 9.74" strokeLinecap="round"/>
+                </svg>
+                Поделиться
+              </>
+            )}
           </button>
+
           <a
             href={`/g/${gallery.shareToken}`}
             target="_blank"
-            className="px-4 py-2.5 rounded-full text-sm border transition-all"
-            style={{ borderColor: "#D9C9AB", color: "#7A5A32", fontFamily: "var(--font-inter)" }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm border border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/20 transition-all"
+            style={{ fontFamily: "var(--font-inter)" }}
           >
-            Предпросмотр ↗
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M5 2H2.5A.5.5 0 0 0 2 2.5v8a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V8" strokeLinecap="round"/>
+              <path d="M7.5 2H11v3.5M11 2L6 7" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Предпросмотр
           </a>
+
           <button
             onClick={deleteGallery}
-            className="px-4 py-2.5 rounded-full text-sm border transition-all hover:border-red-300 hover:text-red-400"
-            style={{ borderColor: "#D9C9AB", color: "#9A7340", fontFamily: "var(--font-inter)" }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm border border-white/[0.08] text-neutral-600 hover:text-red-400 hover:border-red-500/20 transition-all"
+            style={{ fontFamily: "var(--font-inter)" }}
           >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 3.5h9M4.5 3.5V2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1M5.5 6v3M7.5 6v3M3 3.5l.5 7a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5l.5-7" strokeLinecap="round"/>
+            </svg>
             Удалить
           </button>
         </div>
       </div>
 
-      {/* Share link display */}
-      <div className="mb-6 px-4 py-3 rounded-xl flex items-center gap-3" style={{ backgroundColor: "#EDE3D4" }}>
-        <span className="text-xs" style={{ color: "#9A7340" }}>Ссылка для клиента:</span>
-        <span className="text-sm truncate flex-1" style={{ color: "#5C4124", fontFamily: "var(--font-inter)" }}>{shareUrl}</span>
-        <button onClick={copyShareLink} className="text-xs px-3 py-1 rounded-full shrink-0" style={{ backgroundColor: "#C9A97A", color: "#FAF7F2" }}>
-          {copied ? "✓" : "Копировать"}
+      {/* Share link bar */}
+      <div className="mb-6 px-4 py-3 rounded-xl flex items-center gap-3 bg-white/[0.03] border border-white/[0.06]">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#FF6B00" strokeWidth="1.5" className="shrink-0">
+          <path d="M5 7a3 3 0 0 0 5.12 2.12l2-2a3 3 0 0 0-4.24-4.24L6.5 4.26" strokeLinecap="round"/>
+          <path d="M9 7a3 3 0 0 0-5.12-2.12l-2 2a3 3 0 0 0 4.24 4.24L7.5 9.74" strokeLinecap="round"/>
+        </svg>
+        <span className="text-xs text-neutral-500 shrink-0">Ссылка для клиента:</span>
+        <span className="text-sm text-neutral-400 truncate flex-1 font-mono text-xs">{shareUrl}</span>
+        <button
+          onClick={copyShareLink}
+          className="text-xs px-3 py-1.5 rounded-md shrink-0 transition-all font-medium"
+          style={{
+            background: "rgba(255,107,0,0.1)",
+            color: "#FF6B00",
+            border: "1px solid rgba(255,107,0,0.2)",
+          }}
+        >
+          {copied ? "✓ Готово" : "Копировать"}
         </button>
       </div>
 
@@ -163,11 +231,11 @@ export default function GalleryAdminPage() {
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); uploadFiles(e.dataTransfer.files); }}
-        onClick={() => fileInputRef.current?.click()}
-        className="border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all mb-8"
+        onClick={() => !uploading && fileInputRef.current?.click()}
+        className="border-2 border-dashed rounded-2xl p-8 text-center transition-all mb-8 cursor-pointer"
         style={{
-          borderColor: dragging ? "#C9A97A" : "#D9C9AB",
-          backgroundColor: dragging ? "#F2EBE0" : "transparent",
+          borderColor: dragging ? "#FF6B00" : "rgba(255,255,255,0.08)",
+          backgroundColor: dragging ? "rgba(255,107,0,0.05)" : "transparent",
         }}
       >
         <input
@@ -179,19 +247,34 @@ export default function GalleryAdminPage() {
           onChange={(e) => e.target.files && uploadFiles(e.target.files)}
         />
         {uploading ? (
-          <div>
-            <div className="w-full h-2 rounded-full mb-3" style={{ backgroundColor: "#E8DCC8" }}>
-              <div className="h-2 rounded-full transition-all" style={{ width: `${uploadProgress}%`, backgroundColor: "#C9A97A" }} />
+          <div className="max-w-xs mx-auto">
+            <div className="w-full h-1.5 rounded-full mb-3 bg-white/10">
+              <motion.div
+                className="h-1.5 rounded-full"
+                style={{ background: "linear-gradient(90deg, #FF6B00, #FF8C33)" }}
+                animate={{ width: `${uploadProgress}%` }}
+                transition={{ duration: 0.3 }}
+              />
             </div>
-            <p className="text-sm" style={{ color: "#9A7340" }}>Загружаем... {uploadProgress}%</p>
+            <p className="text-sm text-neutral-400" style={{ fontFamily: "var(--font-inter)" }}>
+              Загружаем... <span className="text-orange-400 font-medium">{uploadProgress}%</span>
+            </p>
           </div>
         ) : (
           <div>
-            <div className="text-3xl mb-2 opacity-30">↑</div>
-            <p className="text-sm" style={{ color: "#9A7340", fontFamily: "var(--font-inter)" }}>
-              Перетащи фото сюда или <span style={{ color: "#C9A97A" }}>выбери файлы</span>
+            <div className="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#FF6B00" strokeWidth="1.5" strokeOpacity="0.6">
+                <path d="M11 3v12M6 8l5-5 5 5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 18h16" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <p className="text-sm text-neutral-400 mb-1" style={{ fontFamily: "var(--font-inter)" }}>
+              Перетащи фото сюда или{" "}
+              <span className="text-orange-400">выбери файлы</span>
             </p>
-            <p className="text-xs mt-1 opacity-50" style={{ color: "#9A7340" }}>JPG, PNG, WEBP — любое количество</p>
+            <p className="text-xs text-neutral-600" style={{ fontFamily: "var(--font-inter)" }}>
+              JPG, PNG, WEBP — любое количество
+            </p>
           </div>
         )}
       </div>
@@ -199,7 +282,7 @@ export default function GalleryAdminPage() {
       {/* Photos Grid */}
       {gallery.photos.length > 0 && (
         <div>
-          <p className="text-sm mb-4" style={{ color: "#9A7340" }}>
+          <p className="text-xs text-neutral-600 mb-4" style={{ fontFamily: "var(--font-inter)" }}>
             Нажми на фото чтобы сделать обложкой · Наведи чтобы удалить
           </p>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
@@ -209,27 +292,40 @@ export default function GalleryAdminPage() {
                 return (
                   <motion.div
                     key={photo.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="relative aspect-square group cursor-pointer rounded-lg overflow-hidden"
-                    style={{ border: isCover ? "2px solid #C9A97A" : "2px solid transparent" }}
+                    exit={{ opacity: 0, scale: 0.85 }}
+                    className="relative aspect-square group cursor-pointer rounded-xl overflow-hidden"
+                    style={{
+                      border: isCover ? "2px solid #FF6B00" : "2px solid transparent",
+                      boxShadow: isCover ? "0 0 12px rgba(255,107,0,0.3)" : "none",
+                    }}
                     onClick={() => setCover(photo.id)}
                   >
                     <img
                       src={getPublicUrl(photo.previewKey)}
                       alt={photo.filename}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
+
+                    {/* Dark overlay on hover */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                    {/* Cover badge */}
                     {isCover && (
-                      <div className="absolute top-1 left-1 text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#C9A97A", color: "#FAF7F2" }}>
+                      <div
+                        className="absolute top-1.5 left-1.5 text-[10px] px-2 py-0.5 rounded-md font-medium"
+                        style={{ background: "#FF6B00", color: "#fff" }}
+                      >
                         обложка
                       </div>
                     )}
+
+                    {/* Delete button */}
                     <button
                       onClick={(e) => { e.stopPropagation(); deletePhoto(photo.id); }}
-                      className="absolute top-1 right-1 w-6 h-6 rounded-full items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity hidden group-hover:flex"
-                      style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-md items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity hidden group-hover:flex"
+                      style={{ backgroundColor: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.15)" }}
                     >
                       ✕
                     </button>

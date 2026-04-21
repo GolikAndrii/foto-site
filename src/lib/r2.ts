@@ -31,14 +31,16 @@ export async function deleteFromR2(key: string) {
   );
 }
 
-export async function getPresignedDownloadUrl(key: string) {
+export async function getPresignedDownloadUrl(key: string, filename: string) {
   const { GetObjectCommand } = await import("@aws-sdk/client-s3");
   return getSignedUrl(r2, new GetObjectCommand({
     Bucket: process.env.R2_BUCKET_NAME!,
     Key: key,
+    ResponseContentDisposition: `attachment; filename="${encodeURIComponent(filename)}"`,
   }), { expiresIn: 3600 });
 }
 
 export function getPublicUrl(key: string) {
-  return `${process.env.R2_PUBLIC_URL}/${key}`;
+  const base = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL;
+  return `${base}/${key}`;
 }

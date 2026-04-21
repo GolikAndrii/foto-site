@@ -55,23 +55,31 @@ export default function GalleryAdminPage() {
       const file = arr[i];
 
       // 1. Get presigned PUT URL for original
-      const { presignedUrl, originalKey, previewKey } = await fetch(
-        `/api/galleries/${id}/photos/presign`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: file.name, contentType: file.type || "image/jpeg" }),
-        }
-      ).then((r) => r.json());
+      const presignRes = await fetch(`/api/galleries/${id}/photos/presign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, contentType: file.type || "image/jpeg" }),
+      });
+      if (!presignRes.ok) {
+        const err = await presignRes.text();
+        alert(`Fehler beim Presign (${presignRes.status}): ${err}`);
+        break;
+      }
+      const { presignedUrl, originalKey, previewKey } = await presignRes.json();
 
-      // 2. Upload original directly to R2 (no Vercel limit, CORS enabled)
-      await fetch(presignedUrl, {
+      // 2. Upload original directly to R2
+      const r2Res = await fetch(presignedUrl, {
         method: "PUT",
         body: file,
         headers: { "Content-Type": file.type || "image/jpeg" },
       });
+      if (!r2Res.ok) {
+        const err = await r2Res.text();
+        alert(`Fehler beim R2-Upload (${r2Res.status}): ${err.slice(0, 300)}`);
+        break;
+      }
 
-      // 3. Resize client-side for Sharp → send to API for WebP preview
+      // 3. Resize client-side → API generates WebP preview
       const resized = await resizeForPreview(file, 1800);
       const form = new FormData();
       form.append("source", resized, file.name);
@@ -79,7 +87,12 @@ export default function GalleryAdminPage() {
       form.append("previewKey", previewKey);
       form.append("filename", file.name);
       form.append("sizeBytes", String(file.size));
-      await fetch(`/api/galleries/${id}/photos`, { method: "POST", body: form });
+      const previewRes = await fetch(`/api/galleries/${id}/photos`, { method: "POST", body: form });
+      if (!previewRes.ok) {
+        const err = await previewRes.text();
+        alert(`Fehler beim Preview (${previewRes.status}): ${err.slice(0, 300)}`);
+        break;
+      }
 
       setUploadProgress(Math.round(((i + 1) / arr.length) * 100));
     }

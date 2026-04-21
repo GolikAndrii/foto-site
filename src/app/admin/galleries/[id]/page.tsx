@@ -27,18 +27,19 @@ export default function GalleryAdminPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function resizeForServer(file: File, maxWidth = 1800): Promise<Blob> {
+  // Resize image client-side to keep under Vercel's 4MB limit
+  async function resizeForServer(file: File, maxPx = 3800): Promise<Blob> {
     return new Promise((resolve) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {
-        const scale = Math.min(1, maxWidth / img.width);
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
         canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
         URL.revokeObjectURL(url);
-        canvas.toBlob((blob) => resolve(blob!), "image/jpeg", 0.88);
+        canvas.toBlob((blob) => resolve(blob!), "image/jpeg", 0.92);
       };
       img.src = url;
     });
@@ -52,36 +53,11 @@ export default function GalleryAdminPage() {
 
     for (let i = 0; i < arr.length; i++) {
       const file = arr[i];
-
-      // 1. Get presigned URL for original + key pair
-      const { presignedUrl, originalKey, previewKey } = await fetch(
-        `/api/galleries/${id}/photos/presign`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: file.name, contentType: file.type }),
-        }
-      ).then((r) => r.json());
-
-      // 2. Upload original directly to R2 (no Vercel size limit)
-      await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type || "image/jpeg" },
-      });
-
-      // 3. Resize client-side for Sharp preview generation (stays under 4.5MB)
-      const resized = await resizeForServer(file, 1800);
-
-      // 4. Send resized blob to API → Sharp generates WebP preview
+      // Resize client-side so the request stays under Vercel's 4MB body limit
+      const resized = await resizeForServer(file, 3800);
       const form = new FormData();
-      form.append("source", resized, file.name);
-      form.append("originalKey", originalKey);
-      form.append("previewKey", previewKey);
-      form.append("filename", file.name);
-      form.append("sizeBytes", String(file.size));
+      form.append("files", resized, file.name);
       await fetch(`/api/galleries/${id}/photos`, { method: "POST", body: form });
-
       setUploadProgress(Math.round(((i + 1) / arr.length) * 100));
     }
 

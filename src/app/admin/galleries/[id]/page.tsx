@@ -53,58 +53,12 @@ export default function GalleryAdminPage() {
 
     for (let i = 0; i < arr.length; i++) {
       const file = arr[i];
-      try {
-        // 1. Get presigned PUT URL for original
-        const presignRes = await fetch(`/api/galleries/${id}/photos/presign`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: file.name, contentType: file.type || "image/jpeg" }),
-        });
-        if (!presignRes.ok) {
-          alert(`Presign fehlgeschlagen (${presignRes.status}): ${await presignRes.text()}`);
-          break;
-        }
-        const { presignedUrl, originalKey, previewKey } = await presignRes.json();
-
-        // 2. Upload original directly to R2
-        let r2Ok = false;
-        try {
-          const r2Res = await fetch(presignedUrl, {
-            method: "PUT",
-            body: file,
-            headers: { "Content-Type": file.type || "image/jpeg" },
-          });
-          if (!r2Res.ok) {
-            alert(`R2 PUT fehlgeschlagen (${r2Res.status}): ${(await r2Res.text()).slice(0, 300)}`);
-            break;
-          }
-          r2Ok = true;
-        } catch (corsErr) {
-          alert(`R2 CORS/Netzwerk-Fehler: ${corsErr}\n\nPresigned URL: ${presignedUrl.slice(0, 80)}…`);
-          break;
-        }
-
-        if (!r2Ok) break;
-
-        // 3. Resize client-side → API generates WebP preview
-        const resized = await resizeForPreview(file, 1800);
-        const form = new FormData();
-        form.append("source", resized, file.name);
-        form.append("originalKey", originalKey);
-        form.append("previewKey", previewKey);
-        form.append("filename", file.name);
-        form.append("sizeBytes", String(file.size));
-        const previewRes = await fetch(`/api/galleries/${id}/photos`, { method: "POST", body: form });
-        if (!previewRes.ok) {
-          alert(`Preview fehlgeschlagen (${previewRes.status}): ${(await previewRes.text()).slice(0, 300)}`);
-          break;
-        }
-
-        setUploadProgress(Math.round(((i + 1) / arr.length) * 100));
-      } catch (err) {
-        alert(`Unbekannter Fehler bei "${file.name}": ${err}`);
-        break;
-      }
+      // Resize to 2000px max — stays well under Vercel's 4.5MB limit
+      const resized = await resizeForPreview(file, 2000);
+      const form = new FormData();
+      form.append("files", resized, file.name);
+      await fetch(`/api/galleries/${id}/photos`, { method: "POST", body: form });
+      setUploadProgress(Math.round(((i + 1) / arr.length) * 100));
     }
 
     setUploading(false);

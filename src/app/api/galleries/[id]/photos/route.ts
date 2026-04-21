@@ -14,47 +14,35 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!gallery) return NextResponse.json({ error: "Gallery not found" }, { status: 404 });
 
   const formData = await req.formData();
-  const files = formData.getAll("files") as File[];
 
-  if (!files.length) return NextResponse.json({ error: "No files" }, { status: 400 });
+  // New flow: source is a client-resized blob, original already uploaded to R2 directly
+  const source = formData.get("source") as File | null;
+  const originalKey = formData.get("originalKey") as string;
+  const previewKey = formData.get("previewKey") as string;
+  const filename = formData.get("filename") as string;
+  const sizeBytes = Number(formData.get("sizeBytes") ?? 0);
+
+  if (!source || !originalKey || !previewKey) {
+    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  }
 
   const lastPhoto = await prisma.photo.findFirst({
     where: { galleryId },
     orderBy: { sortOrder: "desc" },
   });
-  let sortOrder = (lastPhoto?.sortOrder ?? -1) + 1;
+  const sortOrder = (lastPhoto?.sortOrder ?? -1) + 1;
 
-  const uploaded = [];
+  const buffer = Buffer.from(await source.arrayBuffer());
+  const previewBuffer = await sharp(buffer)
+    .resize({ width: 1400, withoutEnlargement: true })
+    .webp({ quality: 82 })
+    .toBuffer();
 
-  for (const file of files) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const baseName = `${galleryId}/${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  await uploadToR2(previewKey, previewBuffer, "image/webp");
 
-    const originalKey = `originals/${baseName}.${ext}`;
-    const previewKey = `previews/${baseName}.webp`;
+  const photo = await prisma.photo.create({
+    data: { galleryId, originalKey, previewKey, filename, sizeBytes, sortOrder },
+  });
 
-    const previewBuffer = await sharp(buffer)
-      .resize({ width: 1400, withoutEnlargement: true })
-      .webp({ quality: 82 })
-      .toBuffer();
-
-    await uploadToR2(originalKey, buffer, file.type || "image/jpeg");
-    await uploadToR2(previewKey, previewBuffer, "image/webp");
-
-    const photo = await prisma.photo.create({
-      data: {
-        galleryId,
-        originalKey,
-        previewKey,
-        filename: file.name,
-        sizeBytes: file.size,
-        sortOrder: sortOrder++,
-      },
-    });
-
-    uploaded.push(photo);
-  }
-
-  return NextResponse.json(uploaded);
+  return NextResponse.json(photo);
 }

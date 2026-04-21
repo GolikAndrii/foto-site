@@ -31,6 +31,14 @@ export async function deleteFromR2(key: string) {
   );
 }
 
+export async function getPresignedUploadUrl(key: string, contentType: string) {
+  return getSignedUrl(r2, new PutObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME!,
+    Key: key,
+    ContentType: contentType,
+  }), { expiresIn: 3600 });
+}
+
 export async function getPresignedDownloadUrl(key: string, filename: string) {
   const { GetObjectCommand } = await import("@aws-sdk/client-s3");
   return getSignedUrl(r2, new GetObjectCommand({

@@ -30,6 +30,15 @@ export default function PublicGalleryClient({
   }, [photos]);
 
   async function toggleLike(photoId: string) {
+    // Optimistic update — мгновенно, без ожидания сервера
+    setLikes((prev) => {
+      const cur = prev[photoId] ?? { liked: false, count: 0 };
+      return {
+        ...prev,
+        [photoId]: { liked: !cur.liked, count: cur.liked ? cur.count - 1 : cur.count + 1 },
+      };
+    });
+    // Синхронизируем с сервером в фоне
     const res = await fetch(`/api/photos/${photoId}/like`, { method: "POST" });
     const data = await res.json();
     setLikes((prev) => ({ ...prev, [photoId]: data }));

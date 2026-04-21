@@ -107,6 +107,17 @@ export default function PublicGalleryClient({
         </div>
       </div>
 
+      {/* Footer */}
+      <footer className="py-6 text-center" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: "16px" }}>
+        <p className="text-xs" style={{ color: "#666", fontFamily: "var(--font-inter)", letterSpacing: "0.03em" }}>
+          Fotografie &amp; Galerie von{" "}
+          <a href="https://golikandrii.com" target="_blank" rel="noopener noreferrer"
+            style={{ color: "#999", textDecoration: "none" }}>
+            Andrii Golik
+          </a>
+        </p>
+      </footer>
+
       {/* Lightbox */}
       <AnimatePresence>
         {lightbox !== null && currentPhoto && (

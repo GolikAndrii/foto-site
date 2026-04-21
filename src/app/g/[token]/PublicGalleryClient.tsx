@@ -43,7 +43,8 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
       return { ...prev, [photoId]: { liked: !cur.liked, count: cur.liked ? cur.count - 1 : cur.count + 1 } };
     });
     const res = await fetch(`/api/photos/${photoId}/like`, { method: "POST" });
-    setLikes((prev) => ({ ...prev, [photoId]: await res.json() }));
+    const data = await res.json();
+    setLikes((prev) => ({ ...prev, [photoId]: data }));
   }
 
   async function downloadPhoto(photoId: string, filename: string) {

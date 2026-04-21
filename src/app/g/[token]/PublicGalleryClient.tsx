@@ -114,7 +114,11 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
 
       {/* Masonry grid — 2 cols mobile, 3 tablet, 4 desktop */}
       <div className="max-w-screen-xl mx-auto px-3 py-4">
-        <div style={{ columns: cols, columnGap: "8px" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${cols}, 1fr)`,
+          gap: "6px",
+        }}>
           {photos.map((photo, idx) => {
             const liked = likes[photo.id]?.liked ?? false;
             const count = likes[photo.id]?.count ?? 0;
@@ -126,24 +130,17 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
                 animate={{ opacity: 1 }}
                 transition={{ delay: idx * 0.03, duration: 0.35 }}
                 className="relative group"
-                style={{
-                  breakInside: "avoid",
-                  marginBottom: "8px",
-                  borderRadius: "6px",
-                  overflow: "hidden",
-                  backgroundColor: "#1a1a1a",
-                  display: "block",
-                }}
+                style={{ borderRadius: "5px", overflow: "hidden", backgroundColor: "#141414" }}
               >
-                {/* Photo — natural aspect ratio */}
+                {/* Photo — full natural aspect ratio, no crop */}
                 <div className="relative cursor-pointer" onClick={() => setLightbox(idx)}>
                   <img
                     src={photo.previewUrl}
                     alt={photo.filename}
                     className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.03]"
                     loading="lazy"
+                    style={{ display: "block" }}
                   />
-                  {/* Bottom gradient */}
                   <div className="absolute inset-x-0 bottom-0 h-12 pointer-events-none"
                     style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)" }} />
                 </div>
@@ -162,7 +159,6 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
                       </span>
                     )}
                   </button>
-
                   <button
                     onClick={(e) => { e.stopPropagation(); downloadPhoto(photo.id, photo.filename); }}
                     disabled={downloading === photo.id}
@@ -176,10 +172,9 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
                   </button>
                 </div>
 
-                {/* Liked border */}
                 {liked && (
                   <div className="absolute inset-0 pointer-events-none"
-                    style={{ boxShadow: "inset 0 0 0 1.5px rgba(255,85,119,0.5)", borderRadius: "6px" }} />
+                    style={{ boxShadow: "inset 0 0 0 1.5px rgba(255,85,119,0.5)", borderRadius: "5px" }} />
                 )}
               </motion.div>
             );

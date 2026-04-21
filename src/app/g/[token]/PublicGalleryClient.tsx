@@ -26,6 +26,14 @@ function DownloadIcon({ size = 16 }: { size?: number }) {
 
 export default function PublicGalleryClient({ galleryName, photos }: { galleryName: string; photos: Photo[] }) {
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [cols, setCols] = useState(2);
+
+  useEffect(() => {
+    const update = () => setCols(window.innerWidth >= 768 ? 4 : 2);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
   const [likes, setLikes] = useState<Record<string, { liked: boolean; count: number }>>({});
   const [downloading, setDownloading] = useState<string | null>(null);
 
@@ -106,12 +114,7 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
 
       {/* Masonry grid — 2 cols mobile, 3 tablet, 4 desktop */}
       <div className="max-w-screen-xl mx-auto px-3 py-4">
-        <div style={{
-          columns: "2",
-          columnGap: "8px",
-        }}
-        className="md:[column-count:4]"
-        >
+        <div style={{ columns: cols, columnGap: "8px" }}>
           {photos.map((photo, idx) => {
             const liked = likes[photo.id]?.liked ?? false;
             const count = likes[photo.id]?.count ?? 0;

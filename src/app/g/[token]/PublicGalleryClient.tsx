@@ -110,7 +110,7 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
           columns: "2",
           columnGap: "8px",
         }}
-        className="sm:[column-count:3] md:[column-count:4]"
+        className="md:[column-count:4]"
         >
           {photos.map((photo, idx) => {
             const liked = likes[photo.id]?.liked ?? false;

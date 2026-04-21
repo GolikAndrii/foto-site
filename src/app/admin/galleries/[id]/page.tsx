@@ -27,8 +27,8 @@ export default function GalleryAdminPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Resize image client-side to keep under Vercel's 4MB limit
-  async function resizeForServer(file: File, maxPx = 3800): Promise<Blob> {
+  // Resize for Sharp preview generation (stays under Vercel 4MB)
+  async function resizeForPreview(file: File, maxPx = 1800): Promise<Blob> {
     return new Promise((resolve) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -39,7 +39,7 @@ export default function GalleryAdminPage() {
         canvas.height = Math.round(img.height * scale);
         canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
         URL.revokeObjectURL(url);
-        canvas.toBlob((blob) => resolve(blob!), "image/jpeg", 0.92);
+        canvas.toBlob((blob) => resolve(blob!), "image/jpeg", 0.9);
       };
       img.src = url;
     });
@@ -53,11 +53,34 @@ export default function GalleryAdminPage() {
 
     for (let i = 0; i < arr.length; i++) {
       const file = arr[i];
-      // Resize client-side so the request stays under Vercel's 4MB body limit
-      const resized = await resizeForServer(file, 3800);
+
+      // 1. Get presigned PUT URL for original
+      const { presignedUrl, originalKey, previewKey } = await fetch(
+        `/api/galleries/${id}/photos/presign`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: file.name, contentType: file.type || "image/jpeg" }),
+        }
+      ).then((r) => r.json());
+
+      // 2. Upload original directly to R2 (no Vercel limit, CORS enabled)
+      await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type || "image/jpeg" },
+      });
+
+      // 3. Resize client-side for Sharp → send to API for WebP preview
+      const resized = await resizeForPreview(file, 1800);
       const form = new FormData();
-      form.append("files", resized, file.name);
+      form.append("source", resized, file.name);
+      form.append("originalKey", originalKey);
+      form.append("previewKey", previewKey);
+      form.append("filename", file.name);
+      form.append("sizeBytes", String(file.size));
       await fetch(`/api/galleries/${id}/photos`, { method: "POST", body: form });
+
       setUploadProgress(Math.round(((i + 1) / arr.length) * 100));
     }
 

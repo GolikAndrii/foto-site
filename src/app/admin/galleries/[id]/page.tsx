@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUrl } from "@/lib/r2";
 import type { Gallery, Photo } from "@prisma/client";
 
-type GalleryWithPhotos = Gallery & { photos: Photo[] };
+type GalleryWithPhotos = Gallery & { photos: Photo[]; pin?: string | null };
 
 export default function GalleryAdminPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,17 +18,23 @@ export default function GalleryAdminPage() {
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const [copied, setCopied] = useState(false);
+  const [pinEdit, setPinEdit] = useState(false);
+  const [pinValue, setPinValue] = useState("");
+  const [savingPin, setSavingPin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/galleries/${id}`);
-    if (res.ok) setGallery(await res.json());
+    if (res.ok) {
+      const data = await res.json();
+      setGallery(data);
+      setPinValue(data.pin ?? "");
+    }
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
 
-  // Resize for Sharp preview generation (stays under Vercel 4MB)
-  async function resizeForPreview(file: File, maxPx = 1800): Promise<Blob> {
+  async function resizeForPreview(file: File, maxPx = 2000): Promise<Blob> {
     return new Promise((resolve) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -50,17 +56,13 @@ export default function GalleryAdminPage() {
     if (!arr.length) return;
     setUploading(true);
     setUploadProgress(0);
-
     for (let i = 0; i < arr.length; i++) {
-      const file = arr[i];
-      // Resize to 2000px max — stays well under Vercel's 4.5MB limit
-      const resized = await resizeForPreview(file, 2000);
+      const resized = await resizeForPreview(arr[i], 2000);
       const form = new FormData();
-      form.append("files", resized, file.name);
+      form.append("files", resized, arr[i].name);
       await fetch(`/api/galleries/${id}/photos`, { method: "POST", body: form });
       setUploadProgress(Math.round(((i + 1) / arr.length) * 100));
     }
-
     setUploading(false);
     setUploadProgress(0);
     load();
@@ -91,6 +93,19 @@ export default function GalleryAdminPage() {
     load();
   }
 
+  async function savePin() {
+    if (pinValue.length > 0 && pinValue.length < 3) return;
+    setSavingPin(true);
+    await fetch(`/api/galleries/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: pinValue.length === 3 ? pinValue : null }),
+    });
+    setSavingPin(false);
+    setPinEdit(false);
+    load();
+  }
+
   async function deleteGallery() {
     if (!confirm(`Удалить галерею "${gallery?.name}"? Все фото будут удалены.`)) return;
     await fetch(`/api/galleries/${id}`, { method: "DELETE" });
@@ -99,255 +114,273 @@ export default function GalleryAdminPage() {
 
   function copyShareLink() {
     if (!gallery) return;
-    const url = `${window.location.origin}/g/${gallery.shareToken}`;
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(`${window.location.origin}/g/${gallery.shareToken}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
+  function handlePinDigit(idx: number, char: string) {
+    const clean = char.replace(/\D/g, "").slice(-1);
+    const arr = (pinValue.padEnd(3, " ")).split("").slice(0, 3);
+    arr[idx] = clean;
+    const v = arr.join("").trimEnd();
+    setPinValue(v);
+    if (clean && idx < 2) {
+      (document.getElementById(`gpid-${idx + 1}`) as HTMLInputElement)?.focus();
+    }
+  }
+
   if (!gallery) {
     return (
-      <div className="flex items-center justify-center py-40">
-        <div className="w-8 h-8 rounded-full border-2 border-orange-500/30 border-t-orange-500 animate-spin" />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "120px 0" }}>
+        <div style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid rgba(124,58,237,0.3)", borderTopColor: "var(--accent)", animation: "spin 0.7s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/g/${gallery.shareToken}`;
+  const currentPin = gallery.pin ?? "";
+  const pinDigits = [currentPin[0] ?? "", currentPin[1] ?? "", currentPin[2] ?? ""];
+  const editDigits = [pinValue[0] ?? "", pinValue[1] ?? "", pinValue[2] ?? ""];
 
   return (
     <div>
       {/* Header */}
-      <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
         <div>
           {editingName ? (
-            <div className="flex items-center gap-2">
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input
-                autoFocus
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && saveName()}
-                className="text-2xl font-light border-b-2 outline-none bg-transparent px-1 text-white"
-                style={{ borderColor: "#FF6B00", fontFamily: "var(--font-playfair)", minWidth: "220px" }}
+                autoFocus value={newName}
+                onChange={e => setNewName(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && saveName()}
+                style={{
+                  fontSize: 22, fontWeight: 300, fontFamily: "var(--font-playfair)",
+                  background: "transparent", border: "none", borderBottom: "2px solid var(--accent)",
+                  outline: "none", color: "var(--text)", padding: "2px 4px", minWidth: 200,
+                }}
               />
-              <button
-                onClick={saveName}
-                className="text-sm px-3 py-1.5 rounded-lg font-medium"
-                style={{ background: "linear-gradient(135deg, #FF6B00, #FF8C33)", color: "#fff" }}
-              >
-                ✓
-              </button>
-              <button
-                onClick={() => setEditingName(false)}
-                className="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-neutral-400 hover:text-white"
-              >
-                ✕
-              </button>
+              <ActionBtn onClick={saveName} label="✓" primary />
+              <ActionBtn onClick={() => setEditingName(false)} label="✕" />
             </div>
           ) : (
-            <div className="flex items-center gap-2 group">
-              <h1
-                className="text-3xl font-light text-white"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }} className="name-group">
+              <h1 style={{ fontFamily: "var(--font-playfair)", fontSize: 26, fontWeight: 300, color: "var(--text)", margin: 0 }}>
                 {gallery.name}
               </h1>
               <button
                 onClick={() => { setNewName(gallery.name); setEditingName(true); }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-white/5 text-neutral-500 hover:text-neutral-300"
+                className="edit-btn"
+                style={{ padding: 6, borderRadius: 7, background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", opacity: 0, transition: "opacity 0.15s" }}
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 2.5l1.5 1.5-6.5 6.5H2.5V9L9 2.5z" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
             </div>
           )}
-          <p className="text-sm mt-1 text-neutral-500" style={{ fontFamily: "var(--font-inter)" }}>
+          <p style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, fontFamily: "var(--font-inter)" }}>
             {gallery.photos.length} фото
           </p>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={copyShareLink}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
-            style={{
-              background: copied ? "rgba(255,107,0,0.15)" : "rgba(255,107,0,0.1)",
-              color: copied ? "#FF8C33" : "#FF6B00",
-              border: "1px solid",
-              borderColor: copied ? "rgba(255,140,51,0.4)" : "rgba(255,107,0,0.25)",
-              fontFamily: "var(--font-inter)",
-            }}
-          >
-            {copied ? (
-              <>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M2 7l3.5 3.5L12 3" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Скопировано!
-              </>
-            ) : (
-              <>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M5 7a3 3 0 0 0 5.12 2.12l2-2a3 3 0 0 0-4.24-4.24L6.5 4.26" strokeLinecap="round"/>
-                  <path d="M9 7a3 3 0 0 0-5.12-2.12l-2 2a3 3 0 0 0 4.24 4.24L7.5 9.74" strokeLinecap="round"/>
-                </svg>
-                Поделиться
-              </>
-            )}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <button onClick={copyShareLink} style={{
+            display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 9, fontSize: 13,
+            background: copied ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.1)",
+            color: "var(--accent-lt)",
+            border: `1px solid ${copied ? "rgba(124,58,237,0.45)" : "rgba(124,58,237,0.25)"}`,
+            cursor: "pointer", fontFamily: "var(--font-inter)", transition: "all 0.15s",
+          }}>
+            {copied ? <CheckIcon /> : <LinkIcon />}
+            {copied ? "Скопировано!" : "Поделиться"}
           </button>
 
-          <a
-            href={`/g/${gallery.shareToken}`}
-            target="_blank"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm border border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/20 transition-all"
-            style={{ fontFamily: "var(--font-inter)" }}
+          <a href={`/g/${gallery.shareToken}`} target="_blank" style={{
+            display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 9, fontSize: 13,
+            border: "1px solid var(--border)", color: "var(--text-2)", textDecoration: "none",
+            fontFamily: "var(--font-inter)", transition: "all 0.15s",
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border-2)"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; }}
           >
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M5 2H2.5A.5.5 0 0 0 2 2.5v8a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V8" strokeLinecap="round"/>
-              <path d="M7.5 2H11v3.5M11 2L6 7" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Предпросмотр
+            <ExternalIcon /> Предпросмотр
           </a>
 
-          <button
-            onClick={deleteGallery}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm border border-white/[0.08] text-neutral-600 hover:text-red-400 hover:border-red-500/20 transition-all"
-            style={{ fontFamily: "var(--font-inter)" }}
+          <button onClick={deleteGallery} style={{
+            display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 9, fontSize: 13,
+            border: "1px solid var(--border)", background: "none", color: "var(--text-3)", cursor: "pointer",
+            fontFamily: "var(--font-inter)", transition: "all 0.15s",
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--red)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(244,63,94,0.25)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-3)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
           >
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M2 3.5h9M4.5 3.5V2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1M5.5 6v3M7.5 6v3M3 3.5l.5 7a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5l.5-7" strokeLinecap="round"/>
-            </svg>
-            Удалить
+            <TrashIcon /> Удалить
           </button>
         </div>
       </div>
 
       {/* Share link bar */}
-      <div className="mb-6 px-4 py-3 rounded-xl flex items-center gap-3 bg-white/[0.03] border border-white/[0.06]">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#FF6B00" strokeWidth="1.5" className="shrink-0">
-          <path d="M5 7a3 3 0 0 0 5.12 2.12l2-2a3 3 0 0 0-4.24-4.24L6.5 4.26" strokeLinecap="round"/>
-          <path d="M9 7a3 3 0 0 0-5.12-2.12l-2 2a3 3 0 0 0 4.24 4.24L7.5 9.74" strokeLinecap="round"/>
-        </svg>
-        <span className="text-xs text-neutral-500 shrink-0">Ссылка для клиента:</span>
-        <span className="text-sm text-neutral-400 truncate flex-1 font-mono text-xs">{shareUrl}</span>
-        <button
-          onClick={copyShareLink}
-          className="text-xs px-3 py-1.5 rounded-md shrink-0 transition-all font-medium"
-          style={{
-            background: "rgba(255,107,0,0.1)",
-            color: "#FF6B00",
-            border: "1px solid rgba(255,107,0,0.2)",
-          }}
-        >
-          {copied ? "✓ Готово" : "Копировать"}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", marginBottom: 14,
+        borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)",
+      }}>
+        <LinkIcon color="var(--accent-lt)" />
+        <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0, fontFamily: "var(--font-inter)" }}>Ссылка:</span>
+        <span style={{ fontSize: 12, color: "var(--text-2)", fontFamily: "monospace", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{shareUrl}</span>
+        <button onClick={copyShareLink} style={{
+          padding: "4px 12px", borderRadius: 6, fontSize: 12, cursor: "pointer",
+          background: "rgba(124,58,237,0.12)", color: "var(--accent-lt)",
+          border: "1px solid rgba(124,58,237,0.22)", fontFamily: "var(--font-inter)",
+        }}>
+          {copied ? "✓" : "Копировать"}
         </button>
+      </div>
+
+      {/* PIN protection row */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 16, padding: "14px 16px", marginBottom: 24,
+        borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)", flexWrap: "wrap",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <LockIcon />
+          <span style={{ fontSize: 13, color: "var(--text-2)", fontFamily: "var(--font-inter)", fontWeight: 500 }}>PIN-защита</span>
+          {currentPin.length === 3 && !pinEdit && (
+            <span style={{ display: "flex", gap: 4, marginLeft: 4 }}>
+              {pinDigits.map((d, i) => (
+                <span key={i} style={{
+                  width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                  borderRadius: 6, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)",
+                  fontSize: 14, fontWeight: 700, color: "var(--accent-lt)", fontFamily: "var(--font-inter)",
+                }}>{d}</span>
+              ))}
+            </span>
+          )}
+          {!currentPin && !pinEdit && (
+            <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>не установлен</span>
+          )}
+        </div>
+
+        {pinEdit ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            {editDigits.map((d, i) => (
+              <input key={i} id={`gpid-${i}`}
+                type="text" inputMode="numeric" value={d} maxLength={1}
+                onChange={e => handlePinDigit(i, e.target.value)}
+                onKeyDown={e => { if (e.key === "Backspace" && !editDigits[i] && i > 0) (document.getElementById(`gpid-${i - 1}`) as HTMLInputElement)?.focus(); }}
+                style={{
+                  width: 42, height: 42, textAlign: "center", fontSize: 18, fontWeight: 700,
+                  borderRadius: 9, border: d ? "1.5px solid var(--accent)" : "1px solid var(--border)",
+                  background: d ? "rgba(124,58,237,0.12)" : "var(--bg)", color: "var(--text)",
+                  outline: "none", fontFamily: "var(--font-inter)", caretColor: "transparent", transition: "all 0.12s",
+                }}
+                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                onBlur={e => (e.target.style.borderColor = d ? "var(--accent)" : "var(--border)")}
+              />
+            ))}
+            <ActionBtn onClick={savePin} label={savingPin ? "…" : "Сохранить"} primary />
+            <ActionBtn onClick={() => { setPinEdit(false); setPinValue(currentPin); }} label="Отмена" />
+            {currentPin && (
+              <button onClick={() => {
+                setPinValue(""); setSavingPin(true);
+                fetch(`/api/galleries/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pin: null }) })
+                  .then(() => { setSavingPin(false); setPinEdit(false); load(); });
+              }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--red)", fontFamily: "var(--font-inter)" }}>
+                Удалить PIN
+              </button>
+            )}
+          </div>
+        ) : (
+          <ActionBtn onClick={() => setPinEdit(true)} label={currentPin ? "Изменить" : "Установить"} />
+        )}
       </div>
 
       {/* Upload Zone */}
       <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragOver={e => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); uploadFiles(e.dataTransfer.files); }}
+        onDrop={e => { e.preventDefault(); setDragging(false); uploadFiles(e.dataTransfer.files); }}
         onClick={() => !uploading && fileInputRef.current?.click()}
-        className="border-2 border-dashed rounded-2xl p-8 text-center transition-all mb-8 cursor-pointer"
         style={{
-          borderColor: dragging ? "#FF6B00" : "rgba(255,255,255,0.08)",
-          backgroundColor: dragging ? "rgba(255,107,0,0.05)" : "transparent",
+          border: `2px dashed ${dragging ? "var(--accent)" : "var(--border)"}`,
+          borderRadius: 16, padding: "32px 24px", textAlign: "center",
+          marginBottom: 28, cursor: "pointer",
+          background: dragging ? "rgba(124,58,237,0.06)" : "transparent",
+          transition: "all 0.15s",
         }}
       >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => e.target.files && uploadFiles(e.target.files)}
-        />
+        <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: "none" }}
+          onChange={e => e.target.files && uploadFiles(e.target.files)} />
         {uploading ? (
-          <div className="max-w-xs mx-auto">
-            <div className="w-full h-1.5 rounded-full mb-3 bg-white/10">
-              <motion.div
-                className="h-1.5 rounded-full"
-                style={{ background: "linear-gradient(90deg, #FF6B00, #FF8C33)" }}
-                animate={{ width: `${uploadProgress}%` }}
-                transition={{ duration: 0.3 }}
-              />
+          <div style={{ maxWidth: 260, margin: "0 auto" }}>
+            <div style={{ height: 4, borderRadius: 4, background: "var(--border)", marginBottom: 12 }}>
+              <motion.div style={{ height: 4, borderRadius: 4, background: "linear-gradient(90deg, #7C3AED, #6366F1)" }}
+                animate={{ width: `${uploadProgress}%` }} transition={{ duration: 0.3 }} />
             </div>
-            <p className="text-sm text-neutral-400" style={{ fontFamily: "var(--font-inter)" }}>
-              Загружаем... <span className="text-orange-400 font-medium">{uploadProgress}%</span>
+            <p style={{ fontSize: 13, color: "var(--text-2)", fontFamily: "var(--font-inter)" }}>
+              Загружаем... <span style={{ color: "var(--accent-lt)", fontWeight: 600 }}>{uploadProgress}%</span>
             </p>
           </div>
         ) : (
-          <div>
-            <div className="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#FF6B00" strokeWidth="1.5" strokeOpacity="0.6">
-                <path d="M11 3v12M6 8l5-5 5 5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3 18h16" strokeLinecap="round"/>
+          <>
+            <div style={{
+              width: 44, height: 44, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)",
+              display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px",
+            }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--accent-lt)" strokeWidth="1.5" strokeOpacity="0.8">
+                <path d="M10 3v11M6 8l4-5 4 5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 17h14" strokeLinecap="round"/>
               </svg>
             </div>
-            <p className="text-sm text-neutral-400 mb-1" style={{ fontFamily: "var(--font-inter)" }}>
-              Перетащи фото сюда или{" "}
-              <span className="text-orange-400">выбери файлы</span>
+            <p style={{ fontSize: 13, color: "var(--text-2)", fontFamily: "var(--font-inter)", marginBottom: 4 }}>
+              Перетащи фото сюда или <span style={{ color: "var(--accent-lt)" }}>выбери файлы</span>
             </p>
-            <p className="text-xs text-neutral-600" style={{ fontFamily: "var(--font-inter)" }}>
-              JPG, PNG, WEBP — любое количество
-            </p>
-          </div>
+            <p style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>JPG, PNG, WEBP — любое количество</p>
+          </>
         )}
       </div>
 
       {/* Photos Grid */}
       {gallery.photos.length > 0 && (
         <div>
-          <p className="text-xs text-neutral-600 mb-4" style={{ fontFamily: "var(--font-inter)" }}>
+          <p style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 12, fontFamily: "var(--font-inter)" }}>
             Нажми на фото чтобы сделать обложкой · Наведи чтобы удалить
           </p>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 8 }}>
             <AnimatePresence>
               {gallery.photos.map((photo) => {
                 const isCover = gallery.coverPhotoId === photo.id;
                 return (
-                  <motion.div
-                    key={photo.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.85 }}
-                    className="relative aspect-square group cursor-pointer rounded-xl overflow-hidden"
+                  <motion.div key={photo.id}
+                    initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }}
                     style={{
-                      border: isCover ? "2px solid #FF6B00" : "2px solid transparent",
-                      boxShadow: isCover ? "0 0 12px rgba(255,107,0,0.3)" : "none",
+                      position: "relative", aspectRatio: "1", borderRadius: 10, overflow: "hidden", cursor: "pointer",
+                      border: isCover ? "2px solid var(--accent)" : "2px solid transparent",
+                      boxShadow: isCover ? "0 0 14px rgba(124,58,237,0.35)" : "none",
                     }}
+                    className="photo-thumb"
                     onClick={() => setCover(photo.id)}
                   >
-                    <img
-                      src={getPublicUrl(photo.previewKey)}
-                      alt={photo.filename}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    <img src={getPublicUrl(photo.previewKey)} alt={photo.filename}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s", display: "block" }}
+                      className="photo-img"
                     />
-
-                    {/* Dark overlay on hover */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                    {/* Cover badge */}
+                    <div className="photo-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", opacity: 0, transition: "opacity 0.15s" }} />
                     {isCover && (
-                      <div
-                        className="absolute top-1.5 left-1.5 text-[10px] px-2 py-0.5 rounded-md font-medium"
-                        style={{ background: "#FF6B00", color: "#fff" }}
-                      >
-                        обложка
-                      </div>
+                      <div style={{
+                        position: "absolute", top: 6, left: 6, fontSize: 9, padding: "2px 7px", borderRadius: 5,
+                        background: "var(--accent)", color: "#fff", fontFamily: "var(--font-inter)", fontWeight: 600,
+                      }}>обложка</div>
                     )}
-
-                    {/* Delete button */}
                     <button
-                      onClick={(e) => { e.stopPropagation(); deletePhoto(photo.id); }}
-                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-md items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity hidden group-hover:flex"
-                      style={{ backgroundColor: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.15)" }}
-                    >
-                      ✕
-                    </button>
+                      className="photo-del"
+                      onClick={e => { e.stopPropagation(); deletePhoto(photo.id); }}
+                      style={{
+                        position: "absolute", top: 6, right: 6, width: 22, height: 22, borderRadius: 6,
+                        display: "none", alignItems: "center", justifyContent: "center",
+                        background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.15)",
+                        color: "#fff", fontSize: 11, cursor: "pointer",
+                      }}
+                    >✕</button>
                   </motion.div>
                 );
               })}
@@ -355,6 +388,45 @@ export default function GalleryAdminPage() {
           </div>
         </div>
       )}
+
+      <style>{`
+        .name-group:hover .edit-btn { opacity: 1 !important; }
+        .photo-thumb:hover .photo-overlay { opacity: 1 !important; }
+        .photo-thumb:hover .photo-img { transform: scale(1.05); }
+        .photo-thumb:hover .photo-del { display: flex !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
+}
+
+function ActionBtn({ onClick, label, primary }: { onClick: () => void; label: string; primary?: boolean }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: primary ? 500 : 400, cursor: "pointer",
+      background: primary ? "linear-gradient(135deg, #7C3AED, #6366F1)" : "none",
+      color: primary ? "#fff" : "var(--text-2)",
+      border: primary ? "none" : "1px solid var(--border)",
+      fontFamily: "var(--font-inter)", transition: "all 0.15s",
+      boxShadow: primary ? "0 2px 10px rgba(124,58,237,0.22)" : "none",
+    }}>
+      {label}
+    </button>
+  );
+}
+
+function LinkIcon({ color }: { color?: string }) {
+  return <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke={color ?? "currentColor"} strokeWidth="1.5"><path d="M5 7a3 3 0 0 0 5.12 2.12l2-2a3 3 0 0 0-4.24-4.24L6.5 4.26" strokeLinecap="round"/><path d="M9 7a3 3 0 0 0-5.12-2.12l-2 2a3 3 0 0 0 4.24 4.24L7.5 9.74" strokeLinecap="round"/></svg>;
+}
+function CheckIcon() {
+  return <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 6.5l3.5 3.5L11 3" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+}
+function ExternalIcon() {
+  return <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 2H2.5A.5.5 0 0 0 2 2.5v8a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V8" strokeLinecap="round"/><path d="M7.5 2H11v3.5M11 2L6 7" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+}
+function TrashIcon() {
+  return <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3.5h9M4.5 3.5V2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1M5.5 6v3M7.5 6v3M3 3.5l.5 7a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5l.5-7" strokeLinecap="round"/></svg>;
+}
+function LockIcon() {
+  return <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--accent-lt)" strokeWidth="1.4" strokeLinecap="round"><rect x="2.5" y="6.5" width="9" height="7" rx="1.5"/><path d="M4.5 6.5V4.5a2.5 2.5 0 0 1 5 0v2"/></svg>;
 }

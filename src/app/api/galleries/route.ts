@@ -18,9 +18,11 @@ export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name } = await req.json();
+  const { name, pin } = await req.json();
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
 
-  const gallery = await prisma.gallery.create({ data: { name: name.trim() } });
+  const gallery = await prisma.gallery.create({
+    data: { name: name.trim(), ...(pin?.length === 3 ? { pin } : {}) },
+  });
   return NextResponse.json(gallery);
 }

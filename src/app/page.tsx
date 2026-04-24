@@ -3,21 +3,21 @@
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 
-// Bokeh circles config
 const BOKEH = [
-  { size: 320, x: "10%",  y: "15%",  color: "rgba(255,107,0,0.07)",  blur: 60, delay: 0,   dur: 14 },
-  { size: 180, x: "75%",  y: "8%",   color: "rgba(255,140,50,0.09)", blur: 40, delay: 2,   dur: 11 },
-  { size: 240, x: "85%",  y: "60%",  color: "rgba(255,107,0,0.06)",  blur: 50, delay: 1,   dur: 16 },
-  { size: 140, x: "20%",  y: "75%",  color: "rgba(255,160,80,0.08)", blur: 35, delay: 3,   dur: 12 },
-  { size: 400, x: "50%",  y: "50%",  color: "rgba(255,107,0,0.04)",  blur: 80, delay: 0.5, dur: 20 },
-  { size: 100, x: "60%",  y: "25%",  color: "rgba(255,200,100,0.1)", blur: 25, delay: 4,   dur: 9  },
-  { size: 200, x: "5%",   y: "45%",  color: "rgba(255,107,0,0.05)",  blur: 45, delay: 1.5, dur: 18 },
-  { size: 120, x: "90%",  y: "85%",  color: "rgba(255,140,50,0.08)", blur: 30, delay: 2.5, dur: 13 },
+  { size: 380, x: "10%",  y: "20%",  color: "rgba(124,58,237,0.12)",  blur: 70, delay: 0,   dur: 16 },
+  { size: 200, x: "78%",  y: "10%",  color: "rgba(99,102,241,0.10)",  blur: 45, delay: 2,   dur: 12 },
+  { size: 280, x: "85%",  y: "65%",  color: "rgba(124,58,237,0.08)",  blur: 55, delay: 1,   dur: 18 },
+  { size: 160, x: "22%",  y: "78%",  color: "rgba(167,139,250,0.09)", blur: 38, delay: 3,   dur: 13 },
+  { size: 460, x: "50%",  y: "50%",  color: "rgba(99,102,241,0.05)",  blur: 90, delay: 0.5, dur: 22 },
+  { size: 120, x: "62%",  y: "28%",  color: "rgba(167,139,250,0.11)", blur: 28, delay: 4,   dur: 10 },
+  { size: 220, x: "6%",   y: "48%",  color: "rgba(124,58,237,0.07)",  blur: 50, delay: 1.5, dur: 19 },
+  { size: 140, x: "92%",  y: "82%",  color: "rgba(99,102,241,0.09)",  blur: 32, delay: 2.5, dur: 14 },
 ];
 
 export default function HomePage() {
   return (
-    <main className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden select-none bg-[#080808]">
+    <main className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden select-none"
+      style={{ backgroundColor: "var(--bg)" }}>
 
       {/* Bokeh layer */}
       {BOKEH.map((b, i) => (
@@ -33,144 +33,142 @@ export default function HomePage() {
             background: `radial-gradient(circle at center, ${b.color}, transparent 70%)`,
             filter: `blur(${b.blur}px)`,
           }}
-          animate={{
-            scale: [1, 1.15, 0.95, 1],
-            opacity: [0.7, 1, 0.8, 0.7],
-            x: [0, 20, -15, 0],
-            y: [0, -15, 20, 0],
-          }}
-          transition={{
-            duration: b.dur,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: b.delay,
-          }}
+          animate={{ scale: [1, 1.12, 0.94, 1], opacity: [0.6, 1, 0.75, 0.6], x: [0, 18, -12, 0], y: [0, -14, 18, 0] }}
+          transition={{ duration: b.dur, repeat: Infinity, ease: "easeInOut", delay: b.delay }}
         />
       ))}
 
-      {/* Subtle grid */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
+      {/* Subtle dot grid */}
+      <div className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
         }}
       />
 
+      {/* Noise overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.018]"
+        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }}
+      />
+
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-md">
+      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-sm">
 
         {/* Aperture */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.7, rotate: -30 }}
+          initial={{ opacity: 0, scale: 0.6, rotate: -40 }}
           animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="mb-6"
+          transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-7"
         >
           <ApertureIcon />
         </motion.div>
 
-        {/* Personal tag */}
+        {/* Tag */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="flex items-center gap-3 mb-3"
+          transition={{ delay: 0.35, duration: 0.5 }}
+          className="flex items-center gap-3 mb-4"
         >
-          <div className="w-6 h-px bg-orange-500/40" />
-          <span className="text-[10px] tracking-[0.4em] uppercase text-orange-500/60">
+          <div className="w-8 h-px" style={{ background: "rgba(167,139,250,0.3)" }} />
+          <span className="text-[10px] tracking-[0.38em] uppercase" style={{ color: "var(--accent-lt)", opacity: 0.7 }}>
             Andrii Golik · Fotograf
           </span>
-          <div className="w-6 h-px bg-orange-500/40" />
+          <div className="w-8 h-px" style={{ background: "rgba(167,139,250,0.3)" }} />
         </motion.div>
 
         {/* Title */}
         <motion.h1
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.7 }}
-          className="text-8xl font-light leading-none mb-4 tracking-tight text-white"
-          style={{ fontFamily: "var(--font-playfair)" }}
+          transition={{ delay: 0.45, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+          className="text-8xl font-light leading-none mb-4 tracking-tight"
+          style={{ fontFamily: "var(--font-playfair)", color: "var(--text)" }}
         >
           Folio
         </motion.h1>
 
-        {/* Tagline */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.55, duration: 0.6 }}
-          className="text-sm leading-relaxed mb-3 text-neutral-300"
-          style={{ fontFamily: "var(--font-inter)", letterSpacing: "0.02em" }}
+          transition={{ delay: 0.58, duration: 0.6 }}
+          className="text-sm leading-relaxed mb-2"
+          style={{ fontFamily: "var(--font-inter)", color: "var(--text-2)", letterSpacing: "0.02em" }}
         >
           Meine persönliche Galerie-Plattform
         </motion.p>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.65, duration: 0.6 }}
-          className="text-xs leading-relaxed mb-8 text-neutral-500 max-w-xs"
-          style={{ fontFamily: "var(--font-inter)" }}
+          transition={{ delay: 0.68, duration: 0.6 }}
+          className="text-xs leading-relaxed mb-9 max-w-xs"
+          style={{ fontFamily: "var(--font-inter)", color: "var(--text-3)" }}
         >
-          Hier teile ich meine Fotoserien bequem mit meinen Kunden — zum Ansehen, Auswählen und Herunterladen.
+          Fotoserien bequem mit Kunden teilen — zum Ansehen, Auswählen und Herunterladen.
         </motion.p>
 
-        {/* Features */}
+        {/* Feature badges */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.75 }}
-          className="flex gap-3 mb-10 w-full justify-center flex-wrap"
+          transition={{ delay: 0.78 }}
+          className="flex gap-2 mb-10 w-full justify-center flex-wrap"
         >
           {[
-            { icon: "◈", label: "Galerien teilen" },
-            { icon: "↓", label: "Original laden" },
-            { icon: "♡", label: "Favoriten" },
+            { icon: <ShareIcon />, label: "Teilen" },
+            { icon: <DownloadIcon />, label: "Downloads" },
+            { icon: <LockIcon />, label: "PIN-Schutz" },
+            { icon: <HeartIcon />, label: "Favoriten" },
           ].map((f, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 + i * 0.08 }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.07] bg-white/[0.03]"
+              transition={{ delay: 0.82 + i * 0.07 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              style={{
+                border: "1px solid var(--border)",
+                background: "var(--surface-2)",
+              }}
             >
-              <span className="text-orange-500 text-sm">{f.icon}</span>
-              <span className="text-xs text-neutral-400" style={{ fontFamily: "var(--font-inter)" }}>{f.label}</span>
+              <span style={{ color: "var(--accent-lt)" }}>{f.icon}</span>
+              <span className="text-xs" style={{ fontFamily: "var(--font-inter)", color: "var(--text-3)" }}>{f.label}</span>
             </motion.div>
           ))}
         </motion.div>
 
         {/* CTA */}
         <motion.button
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.05, duration: 0.5 }}
-          whileHover={{ scale: 1.02, boxShadow: "0 0 50px rgba(255,107,0,0.3)" }}
-          whileTap={{ scale: 0.98 }}
+          transition={{ delay: 1.08, duration: 0.5 }}
+          whileHover={{ scale: 1.02, boxShadow: "0 0 55px rgba(124,58,237,0.4)" }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => signIn("google", { callbackUrl: "/admin" })}
-          className="flex items-center gap-3 px-8 py-4 rounded-full text-sm cursor-pointer w-full justify-center font-medium"
+          className="flex items-center gap-3 px-8 py-4 rounded-2xl text-sm cursor-pointer w-full justify-center font-medium"
           style={{
-            background: "linear-gradient(135deg, #FF6B00, #FF9033)",
+            background: "linear-gradient(135deg, #7C3AED, #6366F1)",
             color: "#fff",
             fontFamily: "var(--font-inter)",
-            letterSpacing: "0.05em",
-            boxShadow: "0 4px 30px rgba(255,107,0,0.25)",
+            letterSpacing: "0.04em",
+            boxShadow: "0 4px 32px rgba(124,58,237,0.3)",
           }}
         >
           <GoogleIcon />
           Mit Google anmelden
         </motion.button>
 
-        {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.3 }}
+          transition={{ delay: 1.35 }}
           className="mt-7 flex flex-col items-center gap-1"
         >
-          <p className="text-[10px] tracking-widest uppercase text-neutral-700">
+          <p className="text-[10px] tracking-widest uppercase" style={{ color: "var(--text-3)" }}>
             Nur für autorisierte Nutzer
           </p>
-          <p className="text-[10px] text-neutral-700">© Andrii Golik</p>
+          <p className="text-[10px]" style={{ color: "var(--text-3)" }}>© Andrii Golik</p>
         </motion.div>
       </div>
     </main>
@@ -188,17 +186,15 @@ function ApertureIcon() {
     };
   });
   return (
-    <motion.svg
-      width="56" height="56" viewBox="0 0 52 52" fill="none"
+    <motion.svg width="60" height="60" viewBox="0 0 52 52" fill="none"
       animate={{ rotate: 360 }}
-      transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
-    >
-      <circle cx="26" cy="26" r="24" stroke="#FF6B00" strokeWidth="0.8" strokeOpacity="0.2" />
-      <circle cx="26" cy="26" r="15" stroke="#FF6B00" strokeWidth="0.5" strokeOpacity="0.1" strokeDasharray="3 5" />
-      <circle cx="26" cy="26" r="7" stroke="#FF6B00" strokeWidth="1.5" strokeOpacity="0.9" />
+      transition={{ duration: 45, repeat: Infinity, ease: "linear" }}>
+      <circle cx="26" cy="26" r="24" stroke="#7C3AED" strokeWidth="0.8" strokeOpacity="0.25" />
+      <circle cx="26" cy="26" r="15" stroke="#A78BFA" strokeWidth="0.5" strokeOpacity="0.15" strokeDasharray="3 6" />
+      <circle cx="26" cy="26" r="7" stroke="#A78BFA" strokeWidth="1.6" strokeOpacity="0.95" />
       {lines.map((l, i) => (
         <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
-          stroke="#FF6B00" strokeWidth="1.2" strokeOpacity="0.55" />
+          stroke="#7C3AED" strokeWidth="1.2" strokeOpacity="0.6" />
       ))}
     </motion.svg>
   );
@@ -213,4 +209,16 @@ function GoogleIcon() {
       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="rgba(255,255,255,0.95)"/>
     </svg>
   );
+}
+function ShareIcon() {
+  return <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="13" cy="3" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="13" cy="13" r="1.5"/><path d="M4.5 7.2l7-3.4M4.5 8.8l7 3.4"/></svg>;
+}
+function DownloadIcon() {
+  return <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M8 2v9M5 8l3 3 3-3"/><path d="M2.5 13.5h11"/></svg>;
+}
+function LockIcon() {
+  return <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>;
+}
+function HeartIcon() {
+  return <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 13.5S2 9.3 2 5.3a3.6 3.6 0 0 1 6-2.7A3.6 3.6 0 0 1 14 5.3c0 4-6 8.2-6 8.2z"/></svg>;
 }

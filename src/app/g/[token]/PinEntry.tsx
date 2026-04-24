@@ -101,7 +101,7 @@ export default function PinEntry({ galleryId, galleryName }: { galleryId: string
           {galleryName}
         </h2>
         <p style={{ fontFamily: "var(--font-inter)", fontSize: 13, color: "var(--text-3)", marginBottom: 36, textAlign: "center" }}>
-          Введите 3-значный PIN для доступа
+          Bitte geben Sie den 3-stelligen PIN ein
         </p>
 
         {/* PIN boxes */}
@@ -164,7 +164,7 @@ export default function PinEntry({ galleryId, galleryName }: { galleryId: string
               exit={{ opacity: 0 }}
               style={{ fontSize: 12, color: "var(--red)", fontFamily: "var(--font-inter)", marginBottom: 16, textAlign: "center" }}
             >
-              Неверный PIN. Попробуйте ещё раз.
+              Falscher PIN. Bitte erneut versuchen.
             </motion.p>
           )}
         </AnimatePresence>
@@ -173,7 +173,7 @@ export default function PinEntry({ galleryId, galleryName }: { galleryId: string
         {loading && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid rgba(124,58,237,0.3)", borderTopColor: "var(--accent)", animation: "spin 0.6s linear infinite" }} />
-            <span style={{ fontSize: 12, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>Проверяем...</span>
+            <span style={{ fontSize: 12, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>Prüfen...</span>
           </div>
         )}
       </motion.div>

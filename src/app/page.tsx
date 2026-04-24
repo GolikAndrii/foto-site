@@ -4,14 +4,14 @@ import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 
 const BOKEH = [
-  { size: 380, x: "10%",  y: "20%",  color: "rgba(124,58,237,0.12)",  blur: 70, delay: 0,   dur: 16 },
-  { size: 200, x: "78%",  y: "10%",  color: "rgba(99,102,241,0.10)",  blur: 45, delay: 2,   dur: 12 },
-  { size: 280, x: "85%",  y: "65%",  color: "rgba(124,58,237,0.08)",  blur: 55, delay: 1,   dur: 18 },
-  { size: 160, x: "22%",  y: "78%",  color: "rgba(167,139,250,0.09)", blur: 38, delay: 3,   dur: 13 },
-  { size: 460, x: "50%",  y: "50%",  color: "rgba(99,102,241,0.05)",  blur: 90, delay: 0.5, dur: 22 },
-  { size: 120, x: "62%",  y: "28%",  color: "rgba(167,139,250,0.11)", blur: 28, delay: 4,   dur: 10 },
-  { size: 220, x: "6%",   y: "48%",  color: "rgba(124,58,237,0.07)",  blur: 50, delay: 1.5, dur: 19 },
-  { size: 140, x: "92%",  y: "82%",  color: "rgba(99,102,241,0.09)",  blur: 32, delay: 2.5, dur: 14 },
+  { size: 420, x: "10%",  y: "20%",  color: "rgba(124,58,237,0.35)",  blur: 55, delay: 0,   dur: 14 },
+  { size: 240, x: "78%",  y: "10%",  color: "rgba(99,102,241,0.30)",  blur: 38, delay: 2,   dur: 11 },
+  { size: 320, x: "85%",  y: "65%",  color: "rgba(124,58,237,0.28)",  blur: 45, delay: 1,   dur: 16 },
+  { size: 180, x: "22%",  y: "78%",  color: "rgba(167,139,250,0.32)", blur: 30, delay: 3,   dur: 12 },
+  { size: 500, x: "50%",  y: "50%",  color: "rgba(99,102,241,0.18)",  blur: 75, delay: 0.5, dur: 20 },
+  { size: 150, x: "62%",  y: "28%",  color: "rgba(167,139,250,0.38)", blur: 22, delay: 4,   dur: 9  },
+  { size: 260, x: "6%",   y: "48%",  color: "rgba(124,58,237,0.25)",  blur: 40, delay: 1.5, dur: 17 },
+  { size: 170, x: "92%",  y: "82%",  color: "rgba(99,102,241,0.30)",  blur: 26, delay: 2.5, dur: 13 },
 ];
 
 export default function HomePage() {

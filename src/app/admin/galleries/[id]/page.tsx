@@ -56,13 +56,42 @@ export default function GalleryAdminPage() {
     if (!arr.length) return;
     setUploading(true);
     setUploadProgress(0);
+
     for (let i = 0; i < arr.length; i++) {
-      const resized = await resizeForPreview(arr[i], 2000);
+      const file = arr[i];
+
+      // 1. Get presigned URL + keys for this file
+      const { presignedUrl, originalKey, previewKey } = await fetch(
+        `/api/galleries/${id}/photos/presign`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: file.name, contentType: file.type || "image/jpeg" }),
+        }
+      ).then(r => r.json());
+
+      // 2. Upload ORIGINAL full-resolution file directly to R2 (bypasses Vercel limit)
+      await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type || "image/jpeg" },
+      });
+
+      // 3. Resize for preview on client (keeps server request under Vercel 4.5MB limit)
+      const resized = await resizeForPreview(file, 2000);
+
+      // 4. Send resized to API — server generates WebP preview and saves record
       const form = new FormData();
-      form.append("files", resized, arr[i].name);
+      form.append("source", resized, file.name);
+      form.append("originalKey", originalKey);
+      form.append("previewKey", previewKey);
+      form.append("filename", file.name);
+      form.append("sizeBytes", String(file.size));
       await fetch(`/api/galleries/${id}/photos`, { method: "POST", body: form });
+
       setUploadProgress(Math.round(((i + 1) / arr.length) * 100));
     }
+
     setUploading(false);
     setUploadProgress(0);
     load();

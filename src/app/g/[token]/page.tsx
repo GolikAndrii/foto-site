@@ -57,6 +57,8 @@ export default async function PublicGalleryPage({ params }: { params: Promise<{ 
   const photos = gallery.photos.map((p) => ({
     id: p.id,
     previewUrl: getPublicUrl(p.previewKey),
+    previewMdUrl: p.previewMdKey ? getPublicUrl(p.previewMdKey) : null,
+    previewSmUrl: p.previewSmKey ? getPublicUrl(p.previewSmKey) : null,
     filename: p.filename,
   }));
 

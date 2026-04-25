@@ -3,7 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type Photo = { id: string; previewUrl: string; filename: string };
+type Photo = {
+  id: string;
+  previewUrl: string;       // 1400px — desktop / lightbox
+  previewMdUrl: string | null; // 900px — tablet
+  previewSmUrl: string | null; // 600px — mobile
+  filename: string;
+};
 
 function HeartIcon({ filled, size = 17 }: { filled: boolean; size?: number }) {
   return (
@@ -142,9 +148,16 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
               >
                 <div className="relative cursor-pointer" onClick={() => setLightbox(idx)}>
                   <img
-                    src={photo.previewUrl} alt={photo.filename}
+                    src={photo.previewUrl}
+                    srcSet={[
+                      photo.previewSmUrl && `${photo.previewSmUrl} 600w`,
+                      photo.previewMdUrl && `${photo.previewMdUrl} 900w`,
+                      `${photo.previewUrl} 1400w`,
+                    ].filter(Boolean).join(", ")}
+                    sizes="(max-width: 767px) 50vw, 25vw"
+                    alt={photo.filename}
                     className="w-full h-auto block"
-                    style={{ display: "block", transition: "transform 0.5s", }}
+                    style={{ display: "block", transition: "transform 0.5s" }}
                     loading="lazy"
                   />
                   <div style={{

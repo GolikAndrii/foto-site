@@ -4,6 +4,27 @@ import { prisma } from "@/lib/prisma";
 import { uploadToR2 } from "@/lib/r2";
 import sharp from "sharp";
 
+async function generatePreviews(buffer: Buffer, baseName: string) {
+  const sizes = [
+    { key: `previews/${baseName}_lg.webp`, width: 1400, quality: 82 }, // desktop / lightbox
+    { key: `previews/${baseName}_md.webp`, width: 900,  quality: 80 }, // tablet
+    { key: `previews/${baseName}_sm.webp`, width: 600,  quality: 78 }, // mobile
+  ];
+
+  const results = await Promise.all(
+    sizes.map(async ({ key, width, quality }) => {
+      const buf = await sharp(buffer)
+        .resize({ width, withoutEnlargement: true })
+        .webp({ quality })
+        .toBuffer();
+      await uploadToR2(key, buf, "image/webp");
+      return key;
+    })
+  );
+
+  return { previewKey: results[0], previewMdKey: results[1], previewSmKey: results[2] };
+}
+
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,49 +43,36 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   let sortOrder = (lastPhoto?.sortOrder ?? -1) + 1;
 
   const uploaded = [];
-
-  // Support both new flow (source + keys) and legacy multi-file flow
   const source = formData.get("source") as File | null;
 
   if (source) {
-    // New presigned flow: original already in R2, just generate preview
+    // Presigned flow: original already in R2, generate 3 preview sizes from resized source
     const originalKey = formData.get("originalKey") as string;
-    const previewKey = formData.get("previewKey") as string;
     const filename = formData.get("filename") as string;
     const sizeBytes = Number(formData.get("sizeBytes") ?? 0);
+    const baseName = originalKey.replace(/^originals\//, "").replace(/\.[^.]+$/, "");
 
     const buffer = Buffer.from(await source.arrayBuffer());
-    const previewBuffer = await sharp(buffer)
-      .resize({ width: 1400, withoutEnlargement: true })
-      .webp({ quality: 82 })
-      .toBuffer();
-
-    await uploadToR2(previewKey, previewBuffer, "image/webp");
+    const { previewKey, previewMdKey, previewSmKey } = await generatePreviews(buffer, baseName);
 
     const photo = await prisma.photo.create({
-      data: { galleryId, originalKey, previewKey, filename, sizeBytes, sortOrder },
+      data: { galleryId, originalKey, previewKey, previewMdKey, previewSmKey, filename, sizeBytes, sortOrder },
     });
     uploaded.push(photo);
   } else {
-    // Fallback: single file sent directly (client-resized to fit under 4MB)
+    // Fallback: file sent directly (client-resized)
     const files = formData.getAll("files") as File[];
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
       const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const baseName = `${galleryId}/${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const originalKey = `originals/${baseName}.${ext}`;
-      const previewKey = `previews/${baseName}.webp`;
-
-      const previewBuffer = await sharp(buffer)
-        .resize({ width: 1400, withoutEnlargement: true })
-        .webp({ quality: 82 })
-        .toBuffer();
 
       await uploadToR2(originalKey, buffer, file.type || "image/jpeg");
-      await uploadToR2(previewKey, previewBuffer, "image/webp");
+      const { previewKey, previewMdKey, previewSmKey } = await generatePreviews(buffer, baseName);
 
       const photo = await prisma.photo.create({
-        data: { galleryId, originalKey, previewKey, filename: file.name, sizeBytes: file.size, sortOrder: sortOrder++ },
+        data: { galleryId, originalKey, previewKey, previewMdKey, previewSmKey, filename: file.name, sizeBytes: file.size, sortOrder: sortOrder++ },
       });
       uploaded.push(photo);
     }

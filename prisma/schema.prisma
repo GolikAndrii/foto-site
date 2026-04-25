@@ -23,8 +23,10 @@ model Photo {
   id          String   @id @default(cuid())
   galleryId   String
   gallery     Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  originalKey String
-  previewKey  String
+  originalKey  String
+  previewKey   String   // 1400px — desktop / lightbox
+  previewMdKey String?  // 900px  — tablet
+  previewSmKey String?  // 600px  — mobile
   filename    String
   sizeBytes   Int
   sortOrder   Int      @default(0)

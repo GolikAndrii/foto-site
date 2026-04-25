@@ -70,11 +70,12 @@ export default function GalleryAdminPage() {
         }
       ).then(r => r.json());
 
-      // 2. Upload ORIGINAL full-resolution file directly to R2 (bypasses Vercel limit)
+      // 2. Resize original to 3000px max, then upload directly to R2
+      const original = await resizeForPreview(file, 3000);
       await fetch(presignedUrl, {
         method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type || "image/jpeg" },
+        body: original,
+        headers: { "Content-Type": "image/jpeg" },
       });
 
       // 3. Resize for preview on client (keeps server request under Vercel 4.5MB limit)

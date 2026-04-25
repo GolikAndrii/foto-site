@@ -283,7 +283,7 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
                   }}
                 >
                   <DownloadIcon size={13} />
-                  <span className="hidden sm:inline">{downloading === currentPhoto.id ? "…" : "Original"}</span>
+                  <span className="hidden sm:inline">{downloading === currentPhoto.id ? "…" : "Herunterladen"}</span>
                 </button>
 
                 <button

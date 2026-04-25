@@ -6,6 +6,8 @@ import PublicGalleryClient from "./PublicGalleryClient";
 import PinEntry from "./PinEntry";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const { token } = await params;
   const gallery = await prisma.gallery.findUnique({

@@ -14,6 +14,7 @@ model Gallery {
   shareToken   String   @unique @default(cuid())
   coverPhotoId String?
   pin          String?
+  viewCount    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   photos       Photo[]
@@ -23,15 +24,17 @@ model Photo {
   id          String   @id @default(cuid())
   galleryId   String
   gallery     Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  originalKey  String
-  previewKey   String   // 1400px — desktop / lightbox
-  previewMdKey String?  // 900px  — tablet
-  previewSmKey String?  // 600px  — mobile
-  filename    String
-  sizeBytes   Int
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  likes       Like[]
+  originalKey    String
+  previewKey     String   // 1400px — desktop / lightbox
+  previewMdKey   String?  // 900px  — tablet
+  previewSmKey   String?  // 600px  — mobile
+  filename       String
+  sizeBytes      Int
+  sortOrder      Int      @default(0)
+  lightboxViews  Int      @default(0)
+  downloadCount  Int      @default(0)
+  createdAt      DateTime @default(now())
+  likes          Like[]
 }
 
 model Like {

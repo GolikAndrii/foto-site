@@ -32,11 +32,16 @@ function DownloadIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-export default function PublicGalleryClient({ galleryName, photos }: { galleryName: string; photos: Photo[] }) {
+export default function PublicGalleryClient({ galleryId, galleryName, photos }: { galleryId: string; galleryName: string; photos: Photo[] }) {
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [cols, setCols] = useState(2);
   const [likes, setLikes] = useState<Record<string, { liked: boolean; count: number }>>({});
   const [downloading, setDownloading] = useState<string | null>(null);
+
+  // Ping gallery view once on mount
+  useEffect(() => {
+    fetch(`/api/galleries/${galleryId}/view`, { method: "POST" }).catch(() => {});
+  }, [galleryId]);
 
   useEffect(() => {
     const update = () => setCols(window.innerWidth >= 768 ? 4 : 2);
@@ -146,7 +151,10 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
                 className="relative group"
                 style={{ borderRadius: 6, overflow: "hidden", backgroundColor: "var(--surface)" }}
               >
-                <div className="relative cursor-pointer" onClick={() => setLightbox(idx)}>
+                <div className="relative cursor-pointer" onClick={() => {
+                  setLightbox(idx);
+                  fetch(`/api/photos/${photo.id}/view`, { method: "POST" }).catch(() => {});
+                }}>
                   <img
                     src={photo.previewUrl}
                     srcSet={[
@@ -298,7 +306,11 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
               onClick={e => e.stopPropagation()}>
               <button
                 style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "1px solid var(--border)", color: "rgba(255,255,255,0.7)", zIndex: 2, cursor: "pointer", fontSize: 22 }}
-                onClick={() => setLightbox(i => (i! - 1 + photos.length) % photos.length)}
+                onClick={() => setLightbox(i => {
+                  const next = (i! - 1 + photos.length) % photos.length;
+                  fetch(`/api/photos/${photos[next].id}/view`, { method: "POST" }).catch(() => {});
+                  return next;
+                })}
               >‹</button>
 
               <AnimatePresence mode="wait">
@@ -317,7 +329,11 @@ export default function PublicGalleryClient({ galleryName, photos }: { galleryNa
 
               <button
                 style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "1px solid var(--border)", color: "rgba(255,255,255,0.7)", zIndex: 2, cursor: "pointer", fontSize: 22 }}
-                onClick={() => setLightbox(i => (i! + 1) % photos.length)}
+                onClick={() => setLightbox(i => {
+                  const next = (i! + 1) % photos.length;
+                  fetch(`/api/photos/${photos[next].id}/view`, { method: "POST" }).catch(() => {});
+                  return next;
+                })}
               >›</button>
             </div>
           </motion.div>

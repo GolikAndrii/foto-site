@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.picdrop.com)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack)",
+      "Bash(mkdir -p /c/Foto-Seite/tmp-install)",
+      "Bash(npx create-next-app@latest foto-site --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack)",
+      "Bash(grep -v \"^\\\\.$\")",
+      "Bash(xargs -I{} mv {} /c/Foto-Seite/)",
+      "Bash(npm install *)",
+      "Bash(npx prisma *)",
+      "Bash(npm run *)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:password@localhost:5432/mydb\" npx prisma generate)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(taskkill /PID 18288 /F)",
+      "PowerShell(Stop-Process -Id 18288 -Force)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(npx auth *)",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "Bash(git pull *)",
+      "Bash(npx next *)",
+      "Bash(PowerShell -Command \"Get-Process node | Stop-Process -Force\")",
+      "Bash(vercel env *)",
+      "Bash(vercel --prod)",
+      "Bash(vercel logs *)",
+      "Bash(vercel inspect *)",
+      "Bash(vercel deploy *)",
+      "Bash(vercel ls *)",
+      "Bash(mkdir -p /c/Users/Admin/Desktop/kma-site)",
+      "Bash(unzip -o kma.zip -d kma-site)",
+      "Bash(vercel --yes)",
+      "Bash(mkdir -p \"C:/Foto-Seite/src/app/api/galleries/[id]/view\")",
+      "Bash(mkdir -p \"C:/Foto-Seite/src/app/api/photos/[id]/view\")"
+    ]
+  }
+}

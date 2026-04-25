@@ -62,5 +62,5 @@ export default async function PublicGalleryPage({ params }: { params: Promise<{ 
     filename: p.filename,
   }));
 
-  return <PublicGalleryClient galleryName={gallery.name} photos={photos} />;
+  return <PublicGalleryClient galleryId={gallery.id} galleryName={gallery.name} photos={photos} />;
 }

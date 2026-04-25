@@ -207,9 +207,20 @@ export default function GalleryAdminPage() {
               </button>
             </div>
           )}
-          <p style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, fontFamily: "var(--font-inter)" }}>
-            {gallery.photos.length} фото
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6 }}>
+            <span style={{ fontSize: 13, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>
+              {gallery.photos.length} фото
+            </span>
+            {(gallery as any).viewCount > 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--accent-lt)", fontFamily: "var(--font-inter)" }}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                  <ellipse cx="6.5" cy="6.5" rx="5.5" ry="3.5"/>
+                  <circle cx="6.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/>
+                </svg>
+                {(gallery as any).viewCount} просмотров
+              </span>
+            )}
+          </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -410,6 +421,35 @@ export default function GalleryAdminPage() {
                         color: "#fff", fontSize: 11, cursor: "pointer",
                       }}
                     >✕</button>
+
+                    {/* Stats bar — always visible */}
+                    {((photo as any).lightboxViews > 0 || (photo as any).downloadCount > 0) && (
+                      <div style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0,
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "4px 6px",
+                        background: "linear-gradient(to top, rgba(0,0,0,0.75), transparent)",
+                      }}>
+                        {(photo as any).lightboxViews > 0 && (
+                          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "rgba(255,255,255,0.8)", fontSize: 10, fontFamily: "var(--font-inter)" }}>
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+                              <ellipse cx="5" cy="5" rx="4" ry="2.7"/>
+                              <circle cx="5" cy="5" r="1.2" fill="currentColor" stroke="none"/>
+                            </svg>
+                            {(photo as any).lightboxViews}
+                          </span>
+                        )}
+                        {(photo as any).downloadCount > 0 && (
+                          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "rgba(167,139,250,0.9)", fontSize: 10, fontFamily: "var(--font-inter)" }}>
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M5 1.5v5M3 4.5l2 2 2-2"/>
+                              <path d="M1.5 8.5h7"/>
+                            </svg>
+                            {(photo as any).downloadCount}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}

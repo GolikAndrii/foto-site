@@ -8,85 +8,179 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside style={{
-      width: 228,
-      minHeight: "100vh",
-      background: "var(--surface)",
-      borderRight: "1px solid var(--border)",
-      display: "flex",
-      flexDirection: "column",
-      flexShrink: 0,
-      position: "sticky",
-      top: 0,
-      height: "100vh",
-    }}>
-      {/* Logo */}
-      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid var(--border)" }}>
-        <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <ApertureSmall />
-          <span style={{
-            fontFamily: "var(--font-playfair)",
-            fontSize: 17,
-            fontWeight: 300,
-            letterSpacing: "0.18em",
-            color: "var(--text)",
-          }}>
-            Folio
-          </span>
-        </Link>
-      </div>
+    <>
+      <style>{`
+        .admin-sidebar {
+          width: 228px;
+          min-height: 100vh;
+          background: var(--surface);
+          border-right: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          flex-shrink: 0;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+        }
+        .admin-bottom-nav {
+          display: none;
+        }
+        @media (max-width: 767px) {
+          .admin-sidebar {
+            display: none;
+          }
+          .admin-bottom-nav {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            height: 60px;
+            align-items: stretch;
+          }
+        }
+      `}</style>
 
-      {/* Nav */}
-      <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
-        <SectionLabel>Admin tools</SectionLabel>
+      {/* Desktop sidebar */}
+      <aside className="admin-sidebar">
+        {/* Logo */}
+        <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid var(--border)" }}>
+          <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            <ApertureSmall />
+            <span style={{
+              fontFamily: "var(--font-playfair)",
+              fontSize: 17,
+              fontWeight: 300,
+              letterSpacing: "0.18em",
+              color: "var(--text)",
+            }}>
+              Folio
+            </span>
+          </Link>
+        </div>
 
-        <NavItem
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
+          <SectionLabel>Admin tools</SectionLabel>
+          <NavItem href="/admin" active={pathname === "/admin"} icon={<GalleryIcon />} label="Галереи" />
+          <NavItem href="/admin/galleries/new" active={pathname === "/admin/galleries/new"} icon={<PlusIcon />} label="Новая галерея" />
+        </nav>
+
+        {/* Bottom */}
+        <div style={{ padding: "12px", borderTop: "1px solid var(--border)" }}>
+          <LogoutButton />
+        </div>
+      </aside>
+
+      {/* Mobile bottom nav */}
+      <nav className="admin-bottom-nav">
+        <BottomNavItem
           href="/admin"
           active={pathname === "/admin"}
           icon={<GalleryIcon />}
           label="Галереи"
         />
-        <NavItem
+        <BottomNavItem
           href="/admin/galleries/new"
           active={pathname === "/admin/galleries/new"}
           icon={<PlusIcon />}
-          label="Новая галерея"
+          label="Новая"
         />
+        <BottomLogoutButton />
       </nav>
+    </>
+  );
+}
 
-      {/* Bottom */}
-      <div style={{ padding: "12px", borderTop: "1px solid var(--border)" }}>
-        <button
-          onClick={() => signOut({ callbackUrl: "/" })}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            width: "100%",
-            padding: "9px 12px",
-            borderRadius: 8,
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--text-3)",
-            fontSize: 13,
-            fontFamily: "var(--font-inter)",
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(244,63,94,0.08)";
-            (e.currentTarget as HTMLButtonElement).style.color = "var(--red)";
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = "none";
-            (e.currentTarget as HTMLButtonElement).style.color = "var(--text-3)";
-          }}
-        >
-          <LogoutIcon />
-          Выйти
-        </button>
-      </div>
-    </aside>
+function LogoutButton() {
+  return (
+    <button
+      onClick={() => signOut({ callbackUrl: "/" })}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        width: "100%",
+        padding: "9px 12px",
+        borderRadius: 8,
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        color: "var(--text-3)",
+        fontSize: 13,
+        fontFamily: "var(--font-inter)",
+        transition: "all 0.15s",
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLButtonElement).style.background = "rgba(244,63,94,0.08)";
+        (e.currentTarget as HTMLButtonElement).style.color = "var(--red)";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLButtonElement).style.background = "none";
+        (e.currentTarget as HTMLButtonElement).style.color = "var(--text-3)";
+      }}
+    >
+      <LogoutIcon />
+      Выйти
+    </button>
+  );
+}
+
+function BottomNavItem({ href, active, icon, label }: {
+  href: string; active: boolean; icon: React.ReactNode; label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 4,
+        textDecoration: "none",
+        fontSize: 10,
+        fontFamily: "var(--font-inter)",
+        fontWeight: active ? 600 : 400,
+        color: active ? "var(--accent-lt)" : "var(--text-3)",
+        borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
+        transition: "all 0.15s",
+      }}
+    >
+      <span style={{ lineHeight: 1 }}>{icon}</span>
+      {label}
+    </Link>
+  );
+}
+
+function BottomLogoutButton() {
+  return (
+    <button
+      onClick={() => signOut({ callbackUrl: "/" })}
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 4,
+        background: "none",
+        border: "none",
+        borderBottom: "2px solid transparent",
+        cursor: "pointer",
+        fontSize: 10,
+        fontFamily: "var(--font-inter)",
+        color: "var(--text-3)",
+        transition: "all 0.15s",
+      }}
+    >
+      <LogoutIcon />
+      Выйти
+    </button>
   );
 }
 

@@ -18,6 +18,11 @@ export default async function AdminPage() {
 
   const totalPhotos = galleries.reduce((sum, g) => sum + g._count.photos, 0);
 
+  // Download traffic: sum of downloadCount × sizeBytes across all photos
+  const allPhotos = await prisma.photo.findMany({ select: { downloadCount: true, sizeBytes: true } });
+  const totalDownloadBytes = allPhotos.reduce((sum, p) => sum + p.downloadCount * p.sizeBytes, 0);
+  const totalDownloads = allPhotos.reduce((sum, p) => sum + p.downloadCount, 0);
+
   return (
     <div>
       {/* Page header */}
@@ -47,10 +52,11 @@ export default async function AdminPage() {
 
       {/* Stats row */}
       {galleries.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginBottom: 28 }}>
           <StatCard label="Галерей" value={galleries.length} icon={<GalleryStatIcon />} />
           <StatCard label="Фотографий" value={totalPhotos} icon={<PhotoStatIcon />} />
           <StatCard label="С PIN-защитой" value={galleries.filter((g: { pin: string | null }) => g.pin).length} icon={<LockStatIcon />} />
+          <DownloadStatCard bytes={totalDownloadBytes} count={totalDownloads} />
         </div>
       )}
 
@@ -163,6 +169,66 @@ export default async function AdminPage() {
   );
 }
 
+const GB = 1024 * 1024 * 1024;
+const MB = 1024 * 1024;
+
+function formatBytes(bytes: number): string {
+  if (bytes >= GB)  return (bytes / GB).toFixed(2) + " ГБ";
+  if (bytes >= MB)  return (bytes / MB).toFixed(1) + " МБ";
+  return (bytes / 1024).toFixed(0) + " КБ";
+}
+
+function DownloadStatCard({ bytes, count }: { bytes: number; count: number }) {
+  const WARN_BYTES = 8 * GB;
+  const danger = bytes >= WARN_BYTES;
+  const pct = Math.min(100, Math.round((bytes / WARN_BYTES) * 100));
+
+  const accentColor  = danger ? "#EF4444" : "var(--accent-lt)";
+  const bgColor      = danger ? "rgba(239,68,68,0.15)"  : "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(99,102,241,0.15))";
+  const borderColor  = danger ? "rgba(239,68,68,0.35)"  : "rgba(124,58,237,0.2)";
+  const barColor     = danger ? "#EF4444" : "#7C3AED";
+
+  return (
+    <div style={{
+      padding: "16px 18px", borderRadius: 12,
+      background: "var(--surface)",
+      border: `1px solid ${danger ? "rgba(239,68,68,0.4)" : "var(--border)"}`,
+      boxShadow: danger ? "0 0 18px rgba(239,68,68,0.12)" : "none",
+      display: "flex", flexDirection: "column", gap: 10,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{
+          width: 38, height: 38, borderRadius: 10,
+          background: bgColor,
+          border: `1px solid ${borderColor}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: accentColor, flexShrink: 0,
+        }}>
+          <DownloadStatIcon />
+        </div>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 600, color: accentColor, lineHeight: 1, fontFamily: "var(--font-inter)" }}>
+            {formatBytes(bytes)}
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2, fontFamily: "var(--font-inter)" }}>
+            Скачиваний ({count})
+          </div>
+        </div>
+      </div>
+      {/* Progress bar toward 8 GB */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 2, transition: "width 0.4s" }} />
+        </div>
+        <div style={{ fontSize: 10, color: danger ? "#EF4444" : "var(--text-3)", fontFamily: "var(--font-inter)", display: "flex", justifyContent: "space-between" }}>
+          <span>{pct}% от 8 ГБ</span>
+          {danger && <span style={{ fontWeight: 600 }}>⚠ Лимит превышен</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StatCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
   return (
     <div style={{
@@ -198,4 +264,7 @@ function PhotoStatIcon() {
 }
 function LockStatIcon() {
   return <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>;
+}
+function DownloadStatIcon() {
+  return <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v9M5 8l3 3 3-3"/><path d="M2.5 13.5h11"/></svg>;
 }

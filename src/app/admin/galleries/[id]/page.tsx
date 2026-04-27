@@ -482,14 +482,21 @@ function ActionBtn({ onClick, label, primary }: { onClick: () => void; label: st
 function ViewStats({ gallery }: { gallery: { viewCount: number; desktopViews: number; tabletViews: number; mobileViews: number } }) {
   const total = gallery.viewCount;
   const desktop = gallery.desktopViews ?? 0;
-  const tablet = gallery.tabletViews ?? 0;
-  const mobile = gallery.mobileViews ?? 0;
+  const tablet  = gallery.tabletViews  ?? 0;
+  const mobile  = gallery.mobileViews  ?? 0;
+  const hasDeviceData = (desktop + tablet + mobile) > 0;
 
   const pct = (n: number) => total > 0 ? Math.round((n / total) * 100) : 0;
 
+  const devices = [
+    { label: "Десктоп", value: desktop, color: "#7C3AED" },
+    { label: "Планшет", value: tablet,  color: "#0EA5E9" },
+    { label: "Телефон", value: mobile,  color: "#10B981" },
+  ].filter(d => d.value > 0);
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-      {/* Total views */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {/* Total */}
       <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--accent-lt)", fontFamily: "var(--font-inter)" }}>
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
           <ellipse cx="6.5" cy="6.5" rx="5.5" ry="3.5"/>
@@ -497,35 +504,25 @@ function ViewStats({ gallery }: { gallery: { viewCount: number; desktopViews: nu
         </svg>
         {total} просмотров
       </span>
-      {/* Device breakdown — only if we have device data */}
-      {(desktop + tablet + mobile) > 0 && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {/* Bar */}
-          <div style={{ display: "flex", height: 4, borderRadius: 2, overflow: "hidden", width: 80, background: "var(--border)" }}>
-            {desktop > 0 && <div style={{ width: `${pct(desktop)}%`, background: "#7C3AED" }} />}
-            {tablet > 0  && <div style={{ width: `${pct(tablet)}%`,  background: "#0EA5E9" }} />}
-            {mobile > 0  && <div style={{ width: `${pct(mobile)}%`,  background: "#10B981" }} />}
+
+      {/* Device breakdown */}
+      {hasDeviceData && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {/* Stacked bar */}
+          <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden", width: 160, background: "rgba(255,255,255,0.07)" }}>
+            {devices.map(d => (
+              <div key={d.label} style={{ width: `${pct(d.value)}%`, background: d.color, transition: "width 0.3s" }} />
+            ))}
           </div>
-          {/* Labels */}
-          <div style={{ display: "flex", gap: 8, fontSize: 11, fontFamily: "var(--font-inter)", color: "var(--text-3)" }}>
-            {desktop > 0 && (
-              <span title="Desktop" style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <span style={{ width: 6, height: 6, borderRadius: 1, background: "#7C3AED", display: "inline-block" }} />
-                🖥 {pct(desktop)}%
+          {/* Legend */}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {devices.map(d => (
+              <span key={d.label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontFamily: "var(--font-inter)", color: "var(--text-3)" }}>
+                <span style={{ width: 7, height: 7, borderRadius: 2, background: d.color, display: "inline-block", flexShrink: 0 }} />
+                {d.label} — <span style={{ color: "var(--text-2)", fontWeight: 500 }}>{pct(d.value)}%</span>
+                <span style={{ color: "var(--text-3)", opacity: 0.6 }}>({d.value})</span>
               </span>
-            )}
-            {tablet > 0 && (
-              <span title="Tablet" style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <span style={{ width: 6, height: 6, borderRadius: 1, background: "#0EA5E9", display: "inline-block" }} />
-                📱 {pct(tablet)}%
-              </span>
-            )}
-            {mobile > 0 && (
-              <span title="Mobile" style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <span style={{ width: 6, height: 6, borderRadius: 1, background: "#10B981", display: "inline-block" }} />
-                📲 {pct(mobile)}%
-              </span>
-            )}
+            ))}
           </div>
         </div>
       )}

@@ -489,9 +489,9 @@ function ViewStats({ gallery }: { gallery: { viewCount: number; desktopViews: nu
   const pct = (n: number) => total > 0 ? Math.round((n / total) * 100) : 0;
 
   const devices = [
-    { label: "Десктоп", value: desktop, color: "#7C3AED" },
-    { label: "Планшет", value: tablet,  color: "#0EA5E9" },
-    { label: "Телефон", value: mobile,  color: "#10B981" },
+    { label: "Десктоп", value: desktop, color: "#7C3AED", icon: <MonitorIcon color="#7C3AED" /> },
+    { label: "Планшет", value: tablet,  color: "#0EA5E9", icon: <TabletIcon  color="#0EA5E9" /> },
+    { label: "Телефон", value: mobile,  color: "#10B981", icon: <MobileIcon  color="#10B981" /> },
   ].filter(d => d.value > 0);
 
   return (
@@ -507,7 +507,7 @@ function ViewStats({ gallery }: { gallery: { viewCount: number; desktopViews: nu
 
       {/* Device breakdown */}
       {hasDeviceData && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
           {/* Stacked bar */}
           <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden", width: 160, background: "rgba(255,255,255,0.07)" }}>
             {devices.map(d => (
@@ -517,16 +517,41 @@ function ViewStats({ gallery }: { gallery: { viewCount: number; desktopViews: nu
           {/* Legend */}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {devices.map(d => (
-              <span key={d.label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontFamily: "var(--font-inter)", color: "var(--text-3)" }}>
-                <span style={{ width: 7, height: 7, borderRadius: 2, background: d.color, display: "inline-block", flexShrink: 0 }} />
+              <span key={d.label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: "var(--font-inter)", color: "var(--text-3)" }}>
+                {d.icon}
                 {d.label} — <span style={{ color: "var(--text-2)", fontWeight: 500 }}>{pct(d.value)}%</span>
-                <span style={{ color: "var(--text-3)", opacity: 0.6 }}>({d.value})</span>
+                <span style={{ opacity: 0.5 }}>({d.value})</span>
               </span>
             ))}
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function MonitorIcon({ color }: { color: string }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="2" width="12" height="8" rx="1.2"/>
+      <path d="M4.5 13h5M7 10v3"/>
+    </svg>
+  );
+}
+function TabletIcon({ color }: { color: string }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.5" y="1" width="9" height="12" rx="1.2"/>
+      <circle cx="7" cy="11" r="0.6" fill={color} stroke="none"/>
+    </svg>
+  );
+}
+function MobileIcon({ color }: { color: string }) {
+  return (
+    <svg width="11" height="13" viewBox="0 0 10 14" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="1" width="8" height="12" rx="1.5"/>
+      <circle cx="5" cy="11.5" r="0.6" fill={color} stroke="none"/>
+    </svg>
   );
 }
 

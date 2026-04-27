@@ -14,7 +14,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   });
 
   if (!gallery) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(gallery);
+
+  const totalLikes = await prisma.like.count({
+    where: { photo: { galleryId: id } },
+  });
+
+  return NextResponse.json({ ...gallery, totalLikes });
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {

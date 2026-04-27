@@ -208,10 +208,18 @@ export default function GalleryAdminPage() {
               </button>
             </div>
           )}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
             <span style={{ fontSize: 13, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>
               {gallery.photos.length} фото
             </span>
+            {(gallery as any).totalLikes > 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#C084FC", fontFamily: "var(--font-inter)" }}>
+                <svg width="12" height="12" viewBox="0 0 17 17" fill="#C084FC" stroke="#C084FC" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8.5 14.5S2 10.3 2 5.8a3.8 3.8 0 0 1 6.5-2.7A3.8 3.8 0 0 1 15 5.8c0 4.5-6.5 8.7-6.5 8.7z"/>
+                </svg>
+                {(gallery as any).totalLikes} лайков
+              </span>
+            )}
             {(gallery as any).viewCount > 0 && (
               <ViewStats gallery={gallery as any} />
             )}

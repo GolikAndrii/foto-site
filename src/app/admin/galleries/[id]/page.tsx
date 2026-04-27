@@ -213,13 +213,7 @@ export default function GalleryAdminPage() {
               {gallery.photos.length} фото
             </span>
             {(gallery as any).viewCount > 0 && (
-              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--accent-lt)", fontFamily: "var(--font-inter)" }}>
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
-                  <ellipse cx="6.5" cy="6.5" rx="5.5" ry="3.5"/>
-                  <circle cx="6.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/>
-                </svg>
-                {(gallery as any).viewCount} просмотров
-              </span>
+              <ViewStats gallery={gallery as any} />
             )}
           </div>
         </div>
@@ -482,6 +476,60 @@ function ActionBtn({ onClick, label, primary }: { onClick: () => void; label: st
     }}>
       {label}
     </button>
+  );
+}
+
+function ViewStats({ gallery }: { gallery: { viewCount: number; desktopViews: number; tabletViews: number; mobileViews: number } }) {
+  const total = gallery.viewCount;
+  const desktop = gallery.desktopViews ?? 0;
+  const tablet = gallery.tabletViews ?? 0;
+  const mobile = gallery.mobileViews ?? 0;
+
+  const pct = (n: number) => total > 0 ? Math.round((n / total) * 100) : 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      {/* Total views */}
+      <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--accent-lt)", fontFamily: "var(--font-inter)" }}>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+          <ellipse cx="6.5" cy="6.5" rx="5.5" ry="3.5"/>
+          <circle cx="6.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/>
+        </svg>
+        {total} просмотров
+      </span>
+      {/* Device breakdown — only if we have device data */}
+      {(desktop + tablet + mobile) > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Bar */}
+          <div style={{ display: "flex", height: 4, borderRadius: 2, overflow: "hidden", width: 80, background: "var(--border)" }}>
+            {desktop > 0 && <div style={{ width: `${pct(desktop)}%`, background: "#7C3AED" }} />}
+            {tablet > 0  && <div style={{ width: `${pct(tablet)}%`,  background: "#0EA5E9" }} />}
+            {mobile > 0  && <div style={{ width: `${pct(mobile)}%`,  background: "#10B981" }} />}
+          </div>
+          {/* Labels */}
+          <div style={{ display: "flex", gap: 8, fontSize: 11, fontFamily: "var(--font-inter)", color: "var(--text-3)" }}>
+            {desktop > 0 && (
+              <span title="Desktop" style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <span style={{ width: 6, height: 6, borderRadius: 1, background: "#7C3AED", display: "inline-block" }} />
+                🖥 {pct(desktop)}%
+              </span>
+            )}
+            {tablet > 0 && (
+              <span title="Tablet" style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <span style={{ width: 6, height: 6, borderRadius: 1, background: "#0EA5E9", display: "inline-block" }} />
+                📱 {pct(tablet)}%
+              </span>
+            )}
+            {mobile > 0 && (
+              <span title="Mobile" style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <span style={{ width: 6, height: 6, borderRadius: 1, background: "#10B981", display: "inline-block" }} />
+                📲 {pct(mobile)}%
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

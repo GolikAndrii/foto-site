@@ -38,9 +38,13 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
   const [likes, setLikes] = useState<Record<string, { liked: boolean; count: number }>>({});
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  // Ping gallery view once on mount
+  // Ping gallery view once per browser session (sessionStorage dedup)
   useEffect(() => {
-    fetch(`/api/galleries/${galleryId}/view`, { method: "POST" }).catch(() => {});
+    const key = `viewed_${galleryId}`;
+    if (!sessionStorage.getItem(key)) {
+      fetch(`/api/galleries/${galleryId}/view`, { method: "POST" }).catch(() => {});
+      sessionStorage.setItem(key, "1");
+    }
   }, [galleryId]);
 
   useEffect(() => {

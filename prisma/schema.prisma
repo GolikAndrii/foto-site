@@ -15,6 +15,9 @@ model Gallery {
   coverPhotoId String?
   pin          String?
   viewCount    Int      @default(0)
+  desktopViews Int      @default(0)
+  tabletViews  Int      @default(0)
+  mobileViews  Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   photos       Photo[]

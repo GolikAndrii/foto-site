@@ -23,6 +23,9 @@ export default async function AdminPage() {
   const totalDownloadBytes = allPhotos.reduce((sum, p) => sum + p.downloadCount * p.sizeBytes, 0);
   const totalDownloads = allPhotos.reduce((sum, p) => sum + p.downloadCount, 0);
 
+  // Total likes across all galleries
+  const totalLikes = await prisma.like.count();
+
   return (
     <div>
       {/* Page header */}
@@ -56,6 +59,7 @@ export default async function AdminPage() {
           <StatCard label="Галерей" value={galleries.length} icon={<GalleryStatIcon />} />
           <StatCard label="Фотографий" value={totalPhotos} icon={<PhotoStatIcon />} />
           <StatCard label="С PIN-защитой" value={galleries.filter((g: { pin: string | null }) => g.pin).length} icon={<LockStatIcon />} />
+          <StatCard label="Лайков" value={totalLikes} icon={<LikeStatIcon />} />
           <DownloadStatCard bytes={totalDownloadBytes} count={totalDownloads} />
         </div>
       )}
@@ -265,6 +269,9 @@ function PhotoStatIcon() {
 }
 function LockStatIcon() {
   return <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>;
+}
+function LikeStatIcon() {
+  return <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5S2 10.3 2 5.8a3.8 3.8 0 0 1 6.5-2.7A3.8 3.8 0 0 1 15 5.8c0 4.5-6.5 8.7-6.5 8.7z"/></svg>;
 }
 function DownloadStatIcon() {
   return <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v9M5 8l3 3 3-3"/><path d="M2.5 13.5h11"/></svg>;

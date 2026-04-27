@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Photo = {
   id: string;
-  previewUrl: string;       // 1400px — desktop / lightbox
-  previewMdUrl: string | null; // 900px — tablet
-  previewSmUrl: string | null; // 600px — mobile
+  previewUrl: string;
+  previewMdUrl: string | null;
+  previewSmUrl: string | null;
   filename: string;
 };
 
@@ -32,13 +32,34 @@ function DownloadIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-export default function PublicGalleryClient({ galleryId, galleryName, photos }: { galleryId: string; galleryName: string; photos: Photo[] }) {
+export default function PublicGalleryClient({ galleryId, galleryName, photos }: {
+  galleryId: string; galleryName: string; photos: Photo[];
+}) {
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [cols, setCols] = useState(2);
   const [likes, setLikes] = useState<Record<string, { liked: boolean; count: number }>>({});
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  // Ping gallery view once per browser session (sessionStorage dedup)
+  // Pinch-zoom + pan state (refs to avoid re-render on every touch move)
+  const [scale, setScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const scaleRef = useRef(1);
+  const panRef = useRef({ x: 0, y: 0 });
+  const lastDistRef = useRef<number | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const imageAreaRef = useRef<HTMLDivElement>(null);
+
+  // Reset zoom whenever photo changes or lightbox closes
+  const resetZoom = useCallback(() => {
+    scaleRef.current = 1;
+    panRef.current = { x: 0, y: 0 };
+    setScale(1);
+    setPan({ x: 0, y: 0 });
+  }, []);
+
+  useEffect(() => { resetZoom(); }, [lightbox, resetZoom]);
+
+  // Ping gallery view once per browser session
   useEffect(() => {
     const key = `viewed_${galleryId}`;
     if (!sessionStorage.getItem(key)) {
@@ -47,6 +68,7 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
     }
   }, [galleryId]);
 
+  // Responsive columns
   useEffect(() => {
     const update = () => setCols(window.innerWidth >= 768 ? 4 : 2);
     update();
@@ -54,6 +76,7 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  // Load likes
   useEffect(() => {
     if (!photos.length) return;
     Promise.all(photos.map(async (p) => {
@@ -61,6 +84,108 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
       return [p.id, await res.json()] as const;
     })).then((results) => setLikes(Object.fromEntries(results)));
   }, [photos]);
+
+  // Navigate helpers (exposed as stable refs so touch handlers can call them)
+  const goNext = useCallback(() => {
+    setLightbox(i => {
+      if (i === null) return null;
+      const next = (i + 1) % photos.length;
+      fetch(`/api/photos/${photos[next].id}/view`, { method: "POST" }).catch(() => {});
+      return next;
+    });
+  }, [photos]);
+
+  const goPrev = useCallback(() => {
+    setLightbox(i => {
+      if (i === null) return null;
+      const next = (i - 1 + photos.length) % photos.length;
+      fetch(`/api/photos/${photos[next].id}/view`, { method: "POST" }).catch(() => {});
+      return next;
+    });
+  }, [photos]);
+
+  // Touch: pinch-zoom + swipe (native listeners so we can call preventDefault)
+  useEffect(() => {
+    const el = imageAreaRef.current;
+    if (!el || lightbox === null) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        lastDistRef.current = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY,
+        );
+        touchStartRef.current = null;
+      } else if (e.touches.length === 1) {
+        touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault(); // block browser native zoom
+      if (e.touches.length === 2 && lastDistRef.current !== null) {
+        const newDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY,
+        );
+        const factor = newDist / lastDistRef.current;
+        const newScale = Math.min(6, Math.max(1, scaleRef.current * factor));
+        scaleRef.current = newScale;
+        setScale(newScale);
+        lastDistRef.current = newDist;
+      } else if (e.touches.length === 1 && touchStartRef.current && scaleRef.current > 1) {
+        // Pan when zoomed in
+        const dx = e.touches[0].clientX - touchStartRef.current.x;
+        const dy = e.touches[0].clientY - touchStartRef.current.y;
+        panRef.current = { x: panRef.current.x + dx, y: panRef.current.y + dy };
+        setPan({ ...panRef.current });
+        touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: touchStartRef.current.time };
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      // Swipe navigation only when not zoomed
+      if (e.changedTouches.length === 1 && touchStartRef.current && scaleRef.current <= 1.05) {
+        const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+        const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+        const dt = Date.now() - touchStartRef.current.time;
+        if (Math.abs(dx) > 50 && Math.abs(dy) < 80 && dt < 500) {
+          dx < 0 ? goNext() : goPrev();
+        }
+      }
+      // Release pinch
+      if (e.touches.length < 2) lastDistRef.current = null;
+      // Snap back to 1× if barely zoomed
+      if (scaleRef.current < 1.1) {
+        scaleRef.current = 1;
+        panRef.current = { x: 0, y: 0 };
+        setScale(1);
+        setPan({ x: 0, y: 0 });
+      }
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove",  onTouchMove,  { passive: false }); // passive:false needed for preventDefault
+    el.addEventListener("touchend",   onTouchEnd,   { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove",  onTouchMove);
+      el.removeEventListener("touchend",   onTouchEnd);
+    };
+  }, [lightbox, goNext, goPrev]);
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (lightbox === null) return;
+    if (e.key === "ArrowRight") goNext();
+    if (e.key === "ArrowLeft")  goPrev();
+    if (e.key === "Escape") setLightbox(null);
+  }, [lightbox, goNext, goPrev]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   async function toggleLike(photoId: string) {
     setLikes((prev) => {
@@ -79,18 +204,6 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
     setDownloading(null);
   }
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (lightbox === null) return;
-    if (e.key === "ArrowRight") setLightbox((i) => (i! + 1) % photos.length);
-    if (e.key === "ArrowLeft") setLightbox((i) => (i! - 1 + photos.length) % photos.length);
-    if (e.key === "Escape") setLightbox(null);
-  }, [lightbox, photos.length]);
-
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
-
   const currentPhoto = lightbox !== null ? photos[lightbox] : null;
 
   return (
@@ -106,19 +219,14 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
         <div className="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <ApertureIcon />
-            <h1 style={{
-              fontFamily: "var(--font-playfair)", color: "var(--text)",
-              fontSize: 15, fontWeight: 300, letterSpacing: "0.1em",
-            }}>
+            <h1 style={{ fontFamily: "var(--font-playfair)", color: "var(--text)", fontSize: 15, fontWeight: 300, letterSpacing: "0.1em" }}>
               {galleryName}
             </h1>
           </div>
           <span style={{
             fontFamily: "var(--font-inter)", fontSize: 12, letterSpacing: "0.06em",
-            color: "var(--accent-lt)",
-            padding: "3px 10px", borderRadius: 20,
-            background: "rgba(124,58,237,0.12)",
-            border: "1px solid rgba(124,58,237,0.2)",
+            color: "var(--accent-lt)", padding: "3px 10px", borderRadius: 20,
+            background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.2)",
           }}>
             {photos.length} {photos.length === 1 ? "Foto" : "Fotos"}
           </span>
@@ -172,51 +280,29 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
                     style={{ display: "block", transition: "transform 0.5s" }}
                     loading="lazy"
                   />
-                  <div style={{
-                    position: "absolute", inset: "0 0 0 0", bottom: 0,
-                    background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)",
-                  }} />
+                  <div style={{ position: "absolute", inset: "0 0 0 0", bottom: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)" }} />
                 </div>
 
                 {/* Actions */}
-                <div style={{
-                  position: "absolute", bottom: 0, left: 0, right: 0,
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "6px 10px 8px", zIndex: 2,
-                }}>
-                  <button
-                    onClick={e => { e.stopPropagation(); toggleLike(photo.id); }}
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px 8px", zIndex: 2 }}>
+                  <button onClick={e => { e.stopPropagation(); toggleLike(photo.id); }}
                     style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", gap: 4, transition: "transform 0.1s" }}
                     onMouseDown={e => (e.currentTarget.style.transform = "scale(0.88)")}
-                    onMouseUp={e => (e.currentTarget.style.transform = "scale(1)")}
-                  >
+                    onMouseUp={e => (e.currentTarget.style.transform = "scale(1)")}>
                     <HeartIcon filled={liked} />
-                    {count > 0 && (
-                      <span style={{ color: liked ? "#C084FC" : "rgba(255,255,255,0.65)", fontSize: 11, fontFamily: "var(--font-inter)", fontWeight: 500 }}>
-                        {count}
-                      </span>
-                    )}
+                    {count > 0 && <span style={{ color: liked ? "#C084FC" : "rgba(255,255,255,0.65)", fontSize: 11, fontFamily: "var(--font-inter)", fontWeight: 500 }}>{count}</span>}
                   </button>
-                  <button
-                    onClick={e => { e.stopPropagation(); downloadPhoto(photo.id, photo.filename); }}
+                  <button onClick={e => { e.stopPropagation(); downloadPhoto(photo.id, photo.filename); }}
                     disabled={downloading === photo.id}
                     style={{ background: "none", border: "none", cursor: "pointer", padding: 4, transition: "transform 0.1s" }}
                     title="Original herunterladen"
                     onMouseDown={e => (e.currentTarget.style.transform = "scale(0.88)")}
-                    onMouseUp={e => (e.currentTarget.style.transform = "scale(1)")}
-                  >
-                    {downloading === photo.id
-                      ? <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>…</span>
-                      : <DownloadIcon />}
+                    onMouseUp={e => (e.currentTarget.style.transform = "scale(1)")}>
+                    {downloading === photo.id ? <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>…</span> : <DownloadIcon />}
                   </button>
                 </div>
 
-                {liked && (
-                  <div style={{
-                    position: "absolute", inset: 0, pointerEvents: "none",
-                    boxShadow: "inset 0 0 0 1.5px rgba(192,132,252,0.45)", borderRadius: 6,
-                  }} />
-                )}
+                {liked && <div style={{ position: "absolute", inset: 0, pointerEvents: "none", boxShadow: "inset 0 0 0 1.5px rgba(192,132,252,0.45)", borderRadius: 6 }} />}
               </motion.div>
             );
           })}
@@ -229,8 +315,7 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
           <div style={{ width: 32, height: 1, background: "rgba(124,58,237,0.25)" }} />
           <p style={{ color: "var(--text-3)", fontFamily: "var(--font-inter)", fontSize: 11, letterSpacing: "0.06em" }}>
             Fotografie &amp; Galerie von{" "}
-            <a href="https://golikandrii.com" target="_blank" rel="noopener noreferrer"
-              style={{ color: "var(--accent-lt)", textDecoration: "none", opacity: 0.7 }}>
+            <a href="https://golikandrii.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent-lt)", textDecoration: "none", opacity: 0.7 }}>
               Andrii Golik
             </a>
           </p>
@@ -246,7 +331,13 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", backgroundColor: "rgba(5,4,12,0.97)" }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 50,
+              display: "flex", flexDirection: "column",
+              backgroundColor: "rgba(5,4,12,0.97)",
+              // Prevent browser-level pinch zoom on the whole overlay
+              touchAction: "none",
+            }}
             onClick={() => setLightbox(null)}
           >
             {/* Top bar */}
@@ -256,17 +347,19 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
             }} onClick={e => e.stopPropagation()}>
               <span style={{ color: "var(--text-3)", fontFamily: "var(--font-inter)", fontSize: 13 }}>
                 {lightbox + 1} / {photos.length}
+                {scale > 1.05 && (
+                  <button onClick={resetZoom} style={{ marginLeft: 10, fontSize: 11, color: "var(--accent-lt)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-inter)", padding: 0 }}>
+                    сбросить zoom
+                  </button>
+                )}
               </span>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <button
-                  onClick={() => toggleLike(currentPhoto.id)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, cursor: "pointer",
-                    background: likes[currentPhoto.id]?.liked ? "rgba(192,132,252,0.15)" : "rgba(255,255,255,0.06)",
-                    border: likes[currentPhoto.id]?.liked ? "1px solid rgba(192,132,252,0.35)" : "1px solid var(--border)",
-                    transition: "all 0.15s",
-                  }}
-                >
+                <button onClick={() => toggleLike(currentPhoto.id)} style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, cursor: "pointer",
+                  background: likes[currentPhoto.id]?.liked ? "rgba(192,132,252,0.15)" : "rgba(255,255,255,0.06)",
+                  border: likes[currentPhoto.id]?.liked ? "1px solid rgba(192,132,252,0.35)" : "1px solid var(--border)",
+                  transition: "all 0.15s",
+                }}>
                   <HeartIcon filled={likes[currentPhoto.id]?.liked ?? false} size={15} />
                   {(likes[currentPhoto.id]?.count ?? 0) > 0 && (
                     <span style={{ fontSize: 13, color: likes[currentPhoto.id]?.liked ? "#C084FC" : "var(--text-2)", fontFamily: "var(--font-inter)" }}>
@@ -275,29 +368,22 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
                   )}
                 </button>
 
-                <button
-                  onClick={() => downloadPhoto(currentPhoto.id, currentPhoto.filename)}
+                <button onClick={() => downloadPhoto(currentPhoto.id, currentPhoto.filename)}
                   disabled={downloading === currentPhoto.id}
                   style={{
                     display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 20, cursor: "pointer",
-                    background: "rgba(124,58,237,0.15)",
-                    border: "1px solid rgba(124,58,237,0.3)",
-                    color: "var(--accent-lt)", fontFamily: "var(--font-inter)", fontSize: 13,
-                    transition: "all 0.15s",
-                  }}
-                >
+                    background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)",
+                    color: "var(--accent-lt)", fontFamily: "var(--font-inter)", fontSize: 13, transition: "all 0.15s",
+                  }}>
                   <DownloadIcon size={13} />
                   <span className="hidden sm:inline">{downloading === currentPhoto.id ? "…" : "Herunterladen"}</span>
                 </button>
 
-                <button
-                  onClick={() => setLightbox(null)}
-                  style={{
-                    width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-                    borderRadius: "50%", cursor: "pointer",
-                    background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
-                  }}
-                >
+                <button onClick={() => setLightbox(null)} style={{
+                  width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                  borderRadius: "50%", cursor: "pointer",
+                  background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
+                }}>
                   <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round">
                     <path d="M1 1l9 9M10 1L1 10"/>
                   </svg>
@@ -305,17 +391,19 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
               </div>
             </div>
 
-            {/* Image */}
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative" }}
-              onClick={e => e.stopPropagation()}>
-              <button
-                style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "1px solid var(--border)", color: "rgba(255,255,255,0.7)", zIndex: 2, cursor: "pointer", fontSize: 22 }}
-                onClick={() => setLightbox(i => {
-                  const next = (i! - 1 + photos.length) % photos.length;
-                  fetch(`/api/photos/${photos[next].id}/view`, { method: "POST" }).catch(() => {});
-                  return next;
-                })}
-              >‹</button>
+            {/* Image area — touch handled here */}
+            <div
+              ref={imageAreaRef}
+              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative", touchAction: "none" }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Prev arrow — hidden when zoomed */}
+              {scale <= 1.05 && (
+                <button
+                  style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "1px solid var(--border)", color: "rgba(255,255,255,0.7)", zIndex: 2, cursor: "pointer", fontSize: 22 }}
+                  onClick={goPrev}
+                >‹</button>
+              )}
 
               <AnimatePresence mode="wait">
                 <motion.img
@@ -326,19 +414,30 @@ export default function PublicGalleryClient({ galleryId, galleryName, photos }: 
                   transition={{ duration: 0.16 }}
                   src={currentPhoto.previewUrl}
                   alt={currentPhoto.filename}
-                  onClick={e => e.stopPropagation()}
-                  style={{ maxHeight: "calc(100dvh - 110px)", maxWidth: "100%", width: "auto", height: "auto", objectFit: "contain", borderRadius: 3 }}
+                  draggable={false}
+                  style={{
+                    maxHeight: "calc(100dvh - 60px)",
+                    maxWidth: "100%",
+                    width: "auto",
+                    height: "auto",
+                    objectFit: "contain",
+                    borderRadius: 3,
+                    userSelect: "none",
+                    // Apply zoom + pan transform
+                    transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+                    transformOrigin: "center center",
+                    transition: scale === 1 ? "transform 0.25s ease" : "none",
+                  }}
                 />
               </AnimatePresence>
 
-              <button
-                style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "1px solid var(--border)", color: "rgba(255,255,255,0.7)", zIndex: 2, cursor: "pointer", fontSize: 22 }}
-                onClick={() => setLightbox(i => {
-                  const next = (i! + 1) % photos.length;
-                  fetch(`/api/photos/${photos[next].id}/view`, { method: "POST" }).catch(() => {});
-                  return next;
-                })}
-              >›</button>
+              {/* Next arrow — hidden when zoomed */}
+              {scale <= 1.05 && (
+                <button
+                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "1px solid var(--border)", color: "rgba(255,255,255,0.7)", zIndex: 2, cursor: "pointer", fontSize: 22 }}
+                  onClick={goNext}
+                >›</button>
+              )}
             </div>
           </motion.div>
         )}

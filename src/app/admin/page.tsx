@@ -179,9 +179,10 @@ function formatBytes(bytes: number): string {
 }
 
 function DownloadStatCard({ bytes, count }: { bytes: number; count: number }) {
-  const WARN_BYTES = 8 * GB;
+  const LIMIT_BYTES = 10 * GB;
+  const WARN_BYTES  =  8 * GB;
   const danger = bytes >= WARN_BYTES;
-  const pct = Math.min(100, Math.round((bytes / WARN_BYTES) * 100));
+  const pct = Math.min(100, Math.round((bytes / LIMIT_BYTES) * 100));
 
   const accentColor  = danger ? "#EF4444" : "var(--accent-lt)";
   const bgColor      = danger ? "rgba(239,68,68,0.15)"  : "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(99,102,241,0.15))";
@@ -221,7 +222,7 @@ function DownloadStatCard({ bytes, count }: { bytes: number; count: number }) {
           <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 2, transition: "width 0.4s" }} />
         </div>
         <div style={{ fontSize: 10, color: danger ? "#EF4444" : "var(--text-3)", fontFamily: "var(--font-inter)", display: "flex", justifyContent: "space-between" }}>
-          <span>{pct}% от 8 ГБ</span>
+          <span>{pct}% от 10 ГБ</span>
           {danger && <span style={{ fontWeight: 600 }}>⚠ Лимит превышен</span>}
         </div>
       </div>

@@ -6,7 +6,7 @@ import sharp from "sharp";
 
 async function generatePreviews(buffer: Buffer, baseName: string) {
   const sizes = [
-    { key: `previews/${baseName}_lg.webp`, width: 1400, quality: 82 }, // desktop / lightbox
+    { key: `previews/${baseName}_lg.webp`, width: 1400, quality: 100 }, // desktop / lightbox
     { key: `previews/${baseName}_md.webp`, width: 900,  quality: 80 }, // tablet
     { key: `previews/${baseName}_sm.webp`, width: 600,  quality: 78 }, // mobile
   ];

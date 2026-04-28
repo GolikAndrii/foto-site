@@ -163,12 +163,17 @@ export default function HomePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.35 }}
-          className="mt-7 flex flex-col items-center gap-1"
+          className="mt-7 flex flex-col items-center gap-2"
         >
-          <p className="text-[10px] tracking-widest uppercase" style={{ color: "var(--text-3)" }}>
-            Nur für autorisierte Nutzer
+          <p className="text-[10px] tracking-widest uppercase" style={{ color: "var(--text-3)", opacity: 0.6 }}>
+            Nur für den Administrator
           </p>
-          <p className="text-[10px]" style={{ color: "var(--text-3)" }}>© Andrii Golik</p>
+          <p className="text-[11px]" style={{ fontFamily: "var(--font-inter)", color: "var(--text-2)" }}>
+            Andrii Golik
+          </p>
+          <p className="text-[10px]" style={{ color: "var(--text-3)", opacity: 0.4 }}>
+            Entwickler &amp; Fotograf
+          </p>
         </motion.div>
       </div>
     </main>

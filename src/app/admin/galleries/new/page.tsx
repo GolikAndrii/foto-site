@@ -38,15 +38,15 @@ export default function NewGalleryPage() {
     >
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontFamily: "var(--font-playfair)", fontSize: 28, fontWeight: 300, color: "var(--text)", margin: "0 0 6px" }}>
-          Новая галерея
+          Neue Galerie
         </h1>
         <p style={{ fontFamily: "var(--font-inter)", fontSize: 13, color: "var(--text-3)" }}>
-          Дайте название — потом сможете изменить
+          Gib einen Namen ein – du kannst ihn später ändern
         </p>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <Field label="Название">
+        <Field label="Name">
           <input
             autoFocus
             type="text"
@@ -64,7 +64,7 @@ export default function NewGalleryPage() {
           />
         </Field>
 
-        <Field label="PIN-код (необязательно)" hint="3 цифры — для защиты доступа клиента">
+        <Field label="PIN-Code (optional)" hint="3 Ziffern – zum Schutz des Kundenzugangs">
           <PinInputRow value={pin} onChange={setPin} />
         </Field>
 
@@ -84,9 +84,9 @@ export default function NewGalleryPage() {
             {loading ? (
               <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <span style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
-                Создаём...
+                Wird erstellt...
               </span>
-            ) : "Создать галерею"}
+            ) : "Galerie erstellen"}
           </button>
           <button
             type="button"
@@ -100,7 +100,7 @@ export default function NewGalleryPage() {
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-2)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--text)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--text-2)"; }}
           >
-            Отмена
+            Abbrechen
           </button>
         </div>
       </form>
@@ -179,7 +179,7 @@ function PinInputRow({ value, onChange }: { value: string; onChange: (v: string)
         </button>
       )}
       {value.length > 0 && value.length < 3 && (
-        <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>введите 3 цифры</span>
+        <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>3 Ziffern eingeben</span>
       )}
     </div>
   );

@@ -32,10 +32,10 @@ export default async function AdminPage() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32, gap: 16, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontFamily: "var(--font-playfair)", fontSize: 28, fontWeight: 300, color: "var(--text)", margin: 0 }}>
-            Галереи
+            Galerien
           </h1>
           <p style={{ fontFamily: "var(--font-inter)", fontSize: 13, color: "var(--text-3)", marginTop: 4 }}>
-            {galleries.length === 0 ? "Пока нет галерей" : `${galleries.length} ${galleries.length === 1 ? "галерея" : galleries.length < 5 ? "галереи" : "галерей"}`}
+            {galleries.length === 0 ? "Noch keine Galerien" : `${galleries.length} ${galleries.length === 1 ? "Galerie" : "Galerien"}`}
           </p>
         </div>
         <Link
@@ -49,17 +49,17 @@ export default async function AdminPage() {
             boxShadow: "0 2px 16px rgba(124,58,237,0.28)",
           }}
         >
-          <PlusIcon /> Новая галерея
+          <PlusIcon /> Neue Galerie
         </Link>
       </div>
 
       {/* Stats row */}
       {galleries.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginBottom: 28 }}>
-          <StatCard label="Галерей" value={galleries.length} icon={<GalleryStatIcon />} />
-          <StatCard label="Фотографий" value={totalPhotos} icon={<PhotoStatIcon />} />
-          <StatCard label="С PIN-защитой" value={galleries.filter((g: { pin: string | null }) => g.pin).length} icon={<LockStatIcon />} />
-          <StatCard label="Лайков" value={totalLikes} icon={<LikeStatIcon />} />
+          <StatCard label="Galerien" value={galleries.length} icon={<GalleryStatIcon />} />
+          <StatCard label="Fotos" value={totalPhotos} icon={<PhotoStatIcon />} />
+          <StatCard label="Mit PIN-Schutz" value={galleries.filter((g: { pin: string | null }) => g.pin).length} icon={<LockStatIcon />} />
+          <StatCard label="Likes" value={totalLikes} icon={<LikeStatIcon />} />
           <DownloadStatCard bytes={totalDownloadBytes} count={totalDownloads} />
         </div>
       )}
@@ -81,10 +81,10 @@ export default async function AdminPage() {
             </svg>
           </div>
           <p style={{ fontFamily: "var(--font-playfair)", fontSize: 18, color: "var(--text-2)", marginBottom: 6 }}>
-            Галерей пока нет
+            Noch keine Galerien
           </p>
           <p style={{ fontFamily: "var(--font-inter)", fontSize: 13, color: "var(--text-3)", marginBottom: 24 }}>
-            Создайте первую галерею и загрузите фото
+            Erstelle die erste Galerie und lade Fotos hoch
           </p>
           <Link href="/admin/galleries/new" style={{
             padding: "10px 22px", borderRadius: 10, fontSize: 13, fontWeight: 500,
@@ -93,7 +93,7 @@ export default async function AdminPage() {
             fontFamily: "var(--font-inter)",
             boxShadow: "0 2px 16px rgba(124,58,237,0.25)",
           }}>
-            Создать галерею
+            Galerie erstellen
           </Link>
         </div>
       ) : (
@@ -122,7 +122,7 @@ export default async function AdminPage() {
                         <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="var(--border-2)" strokeWidth="1.2">
                           <rect x="2" y="6" width="26" height="18" rx="3"/><circle cx="15" cy="15" r="5"/><circle cx="15" cy="15" r="2"/><path d="M7 6V4M23 6V4" strokeLinecap="round"/>
                         </svg>
-                        <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>Нет фото</span>
+                        <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>Keine Fotos</span>
                       </div>
                     )}
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%)" }} />
@@ -133,7 +133,7 @@ export default async function AdminPage() {
                       backdropFilter: "blur(6px)", border: "1px solid var(--border)",
                       fontFamily: "var(--font-inter)",
                     }}>
-                      {gallery._count.photos} фото
+                      {gallery._count.photos} Fotos
                     </div>
                     {(gallery as { pin: string | null }).pin && (
                       <div style={{
@@ -177,9 +177,9 @@ const GB = 1024 * 1024 * 1024;
 const MB = 1024 * 1024;
 
 function formatBytes(bytes: number): string {
-  if (bytes >= GB)  return (bytes / GB).toFixed(2) + " ГБ";
-  if (bytes >= MB)  return (bytes / MB).toFixed(1) + " МБ";
-  return (bytes / 1024).toFixed(0) + " КБ";
+  if (bytes >= GB)  return (bytes / GB).toFixed(2) + " GB";
+  if (bytes >= MB)  return (bytes / MB).toFixed(1) + " MB";
+  return (bytes / 1024).toFixed(0) + " KB";
 }
 
 function DownloadStatCard({ bytes, count }: { bytes: number; count: number }) {
@@ -216,7 +216,7 @@ function DownloadStatCard({ bytes, count }: { bytes: number; count: number }) {
             {formatBytes(bytes)}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2, fontFamily: "var(--font-inter)" }}>
-            Скачиваний ({count})
+            Downloads ({count})
           </div>
         </div>
       </div>
@@ -226,8 +226,8 @@ function DownloadStatCard({ bytes, count }: { bytes: number; count: number }) {
           <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 2, transition: "width 0.4s" }} />
         </div>
         <div style={{ fontSize: 10, color: danger ? "#EF4444" : "var(--text-3)", fontFamily: "var(--font-inter)", display: "flex", justifyContent: "space-between" }}>
-          <span>{pct}% от 10 ГБ</span>
-          {danger && <span style={{ fontWeight: 600 }}>⚠ Лимит превышен</span>}
+          <span>{pct}% von 10 GB</span>
+          {danger && <span style={{ fontWeight: 600 }}>⚠ Limit erreicht</span>}
         </div>
       </div>
     </div>

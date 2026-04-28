@@ -137,7 +137,7 @@ export default function GalleryAdminPage() {
   }
 
   async function deleteGallery() {
-    if (!confirm(`Удалить галерею "${gallery?.name}"? Все фото будут удалены.`)) return;
+    if (!confirm(`Galerie "${gallery?.name}" löschen? Alle Fotos werden unwiderruflich gelöscht.`)) return;
     await fetch(`/api/galleries/${id}`, { method: "DELETE" });
     router.push("/admin");
   }
@@ -210,14 +210,14 @@ export default function GalleryAdminPage() {
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
             <span style={{ fontSize: 13, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>
-              {gallery.photos.length} фото
+              {gallery.photos.length} Fotos
             </span>
             {(gallery as any).totalLikes > 0 && (
               <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#C084FC", fontFamily: "var(--font-inter)" }}>
                 <svg width="12" height="12" viewBox="0 0 17 17" fill="#C084FC" stroke="#C084FC" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M8.5 14.5S2 10.3 2 5.8a3.8 3.8 0 0 1 6.5-2.7A3.8 3.8 0 0 1 15 5.8c0 4.5-6.5 8.7-6.5 8.7z"/>
                 </svg>
-                {(gallery as any).totalLikes} лайков
+                {(gallery as any).totalLikes} Likes
               </span>
             )}
             {(gallery as any).viewCount > 0 && (
@@ -235,7 +235,7 @@ export default function GalleryAdminPage() {
             cursor: "pointer", fontFamily: "var(--font-inter)", transition: "all 0.15s",
           }}>
             {copied ? <CheckIcon /> : <LinkIcon />}
-            {copied ? "Скопировано!" : "Поделиться"}
+            {copied ? "Kopiert!" : "Teilen"}
           </button>
 
           <a href={`/g/${gallery.shareToken}`} target="_blank" style={{
@@ -246,7 +246,7 @@ export default function GalleryAdminPage() {
             onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border-2)"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; }}
           >
-            <ExternalIcon /> Предпросмотр
+            <ExternalIcon /> Vorschau
           </a>
 
           <button onClick={deleteGallery} style={{
@@ -257,7 +257,7 @@ export default function GalleryAdminPage() {
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--red)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(244,63,94,0.25)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-3)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
           >
-            <TrashIcon /> Удалить
+            <TrashIcon /> Löschen
           </button>
         </div>
       </div>
@@ -268,14 +268,14 @@ export default function GalleryAdminPage() {
         borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)",
       }}>
         <LinkIcon color="var(--accent-lt)" />
-        <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0, fontFamily: "var(--font-inter)" }}>Ссылка:</span>
+        <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0, fontFamily: "var(--font-inter)" }}>Link:</span>
         <span style={{ fontSize: 12, color: "var(--text-2)", fontFamily: "monospace", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{shareUrl}</span>
         <button onClick={copyShareLink} style={{
           padding: "4px 12px", borderRadius: 6, fontSize: 12, cursor: "pointer",
           background: "rgba(124,58,237,0.12)", color: "var(--accent-lt)",
           border: "1px solid rgba(124,58,237,0.22)", fontFamily: "var(--font-inter)",
         }}>
-          {copied ? "✓" : "Копировать"}
+          {copied ? "✓" : "Kopieren"}
         </button>
       </div>
 
@@ -286,7 +286,7 @@ export default function GalleryAdminPage() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <LockIcon />
-          <span style={{ fontSize: 13, color: "var(--text-2)", fontFamily: "var(--font-inter)", fontWeight: 500 }}>PIN-защита</span>
+          <span style={{ fontSize: 13, color: "var(--text-2)", fontFamily: "var(--font-inter)", fontWeight: 500 }}>PIN-Schutz</span>
           {currentPin.length === 3 && !pinEdit && (
             <span style={{ display: "flex", gap: 4, marginLeft: 4 }}>
               {pinDigits.map((d, i) => (
@@ -299,7 +299,7 @@ export default function GalleryAdminPage() {
             </span>
           )}
           {!currentPin && !pinEdit && (
-            <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>не установлен</span>
+            <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>nicht festgelegt</span>
           )}
         </div>
 
@@ -320,20 +320,20 @@ export default function GalleryAdminPage() {
                 onBlur={e => (e.target.style.borderColor = d ? "var(--accent)" : "var(--border)")}
               />
             ))}
-            <ActionBtn onClick={savePin} label={savingPin ? "…" : "Сохранить"} primary />
-            <ActionBtn onClick={() => { setPinEdit(false); setPinValue(currentPin); }} label="Отмена" />
+            <ActionBtn onClick={savePin} label={savingPin ? "…" : "Speichern"} primary />
+            <ActionBtn onClick={() => { setPinEdit(false); setPinValue(currentPin); }} label="Abbrechen" />
             {currentPin && (
               <button onClick={() => {
                 setPinValue(""); setSavingPin(true);
                 fetch(`/api/galleries/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pin: null }) })
                   .then(() => { setSavingPin(false); setPinEdit(false); load(); });
               }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--red)", fontFamily: "var(--font-inter)" }}>
-                Удалить PIN
+                PIN löschen
               </button>
             )}
           </div>
         ) : (
-          <ActionBtn onClick={() => setPinEdit(true)} label={currentPin ? "Изменить" : "Установить"} />
+          <ActionBtn onClick={() => setPinEdit(true)} label={currentPin ? "Ändern" : "Festlegen"} />
         )}
       </div>
 
@@ -360,7 +360,7 @@ export default function GalleryAdminPage() {
                 animate={{ width: `${uploadProgress}%` }} transition={{ duration: 0.3 }} />
             </div>
             <p style={{ fontSize: 13, color: "var(--text-2)", fontFamily: "var(--font-inter)" }}>
-              Загружаем... <span style={{ color: "var(--accent-lt)", fontWeight: 600 }}>{uploadProgress}%</span>
+              Hochladen... <span style={{ color: "var(--accent-lt)", fontWeight: 600 }}>{uploadProgress}%</span>
             </p>
           </div>
         ) : (
@@ -375,9 +375,9 @@ export default function GalleryAdminPage() {
               </svg>
             </div>
             <p style={{ fontSize: 13, color: "var(--text-2)", fontFamily: "var(--font-inter)", marginBottom: 4 }}>
-              Перетащи фото сюда или <span style={{ color: "var(--accent-lt)" }}>выбери файлы</span>
+              Fotos hierher ziehen oder <span style={{ color: "var(--accent-lt)" }}>Dateien auswählen</span>
             </p>
-            <p style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>JPG, PNG, WEBP — любое количество</p>
+            <p style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)" }}>JPG, PNG, WEBP – beliebig viele</p>
           </>
         )}
       </div>
@@ -386,7 +386,7 @@ export default function GalleryAdminPage() {
       {gallery.photos.length > 0 && (
         <div>
           <p style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 12, fontFamily: "var(--font-inter)" }}>
-            Нажми на фото чтобы сделать обложкой · Наведи чтобы удалить
+            Foto anklicken um Cover zu setzen · Hover zum Löschen
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 8 }}>
             <AnimatePresence>
@@ -412,7 +412,7 @@ export default function GalleryAdminPage() {
                       <div style={{
                         position: "absolute", top: 6, left: 6, fontSize: 9, padding: "2px 7px", borderRadius: 5,
                         background: "var(--accent)", color: "#fff", fontFamily: "var(--font-inter)", fontWeight: 600,
-                      }}>обложка</div>
+                      }}>Cover</div>
                     )}
                     <button
                       className="photo-del"
@@ -574,9 +574,9 @@ function ViewStats({ gallery }: { gallery: { viewCount: number; desktopViews: nu
   const pct = (n: number) => total > 0 ? Math.round((n / total) * 100) : 0;
 
   const devices = [
-    { label: "Десктоп", value: desktop, color: "#7C3AED", icon: <MonitorIcon color="#7C3AED" /> },
-    { label: "Планшет", value: tablet,  color: "#0EA5E9", icon: <TabletIcon  color="#0EA5E9" /> },
-    { label: "Телефон", value: mobile,  color: "#10B981", icon: <MobileIcon  color="#10B981" /> },
+    { label: "Desktop",    value: desktop, color: "#7C3AED", icon: <MonitorIcon color="#7C3AED" /> },
+    { label: "Tablet",     value: tablet,  color: "#0EA5E9", icon: <TabletIcon  color="#0EA5E9" /> },
+    { label: "Smartphone", value: mobile,  color: "#10B981", icon: <MobileIcon  color="#10B981" /> },
   ].filter(d => d.value > 0);
 
   return (
@@ -587,7 +587,7 @@ function ViewStats({ gallery }: { gallery: { viewCount: number; desktopViews: nu
           <ellipse cx="6.5" cy="6.5" rx="5.5" ry="3.5"/>
           <circle cx="6.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/>
         </svg>
-        {total} просмотров
+        {total} Aufrufe
       </span>
 
       {/* Device breakdown */}

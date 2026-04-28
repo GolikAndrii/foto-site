@@ -64,9 +64,9 @@ export default function Sidebar() {
 
         {/* Nav */}
         <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
-          <SectionLabel>Admin tools</SectionLabel>
-          <NavItem href="/admin" active={pathname === "/admin"} icon={<GalleryIcon />} label="Галереи" />
-          <NavItem href="/admin/galleries/new" active={pathname === "/admin/galleries/new"} icon={<PlusIcon />} label="Новая галерея" />
+          <SectionLabel>Verwaltung</SectionLabel>
+          <NavItem href="/admin" active={pathname === "/admin"} icon={<GalleryIcon />} label="Galerien" />
+          <NavItem href="/admin/galleries/new" active={pathname === "/admin/galleries/new"} icon={<PlusIcon />} label="Neue Galerie" />
         </nav>
 
         {/* Bottom */}
@@ -81,13 +81,13 @@ export default function Sidebar() {
           href="/admin"
           active={pathname === "/admin"}
           icon={<GalleryIcon />}
-          label="Галереи"
+          label="Galerien"
         />
         <BottomNavItem
           href="/admin/galleries/new"
           active={pathname === "/admin/galleries/new"}
           icon={<PlusIcon />}
-          label="Новая"
+          label="Neu"
         />
         <BottomLogoutButton />
       </nav>
@@ -124,7 +124,7 @@ function LogoutButton() {
       }}
     >
       <LogoutIcon />
-      Выйти
+      Abmelden
     </button>
   );
 }
@@ -179,7 +179,7 @@ function BottomLogoutButton() {
       }}
     >
       <LogoutIcon />
-      Выйти
+      Abmelden
     </button>
   );
 }

@@ -115,9 +115,9 @@ export default function HomeClient({ photoUrls }: { photoUrls: string[] }) {
             width: "100%",
           }}
         >
-          {/* Aperture */}
+          {/* Aperture — hidden on mobile, visible on desktop */}
           <motion.div initial={{ opacity: 0, scale: 0.6, rotate: -40 }} animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }} className="mb-7 flex justify-center">
+            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }} className="mb-7 hidden sm:flex justify-center">
             <ApertureIcon />
           </motion.div>
 

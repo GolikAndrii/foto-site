@@ -71,7 +71,7 @@ export default function GalleryAdminPage() {
       ).then(r => r.json());
 
       // 2. Resize original to 3000px max, then upload directly to R2
-      const original = await resizeForPreview(file, 3000);
+      const original = await resizeForPreview(file, 4000);
       await fetch(presignedUrl, {
         method: "PUT",
         body: original,

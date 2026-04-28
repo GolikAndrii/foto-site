@@ -192,7 +192,6 @@ export default function HomeClient({ photoUrls }: { photoUrls: string[] }) {
 }
 
 function PhotoGrid({ urls }: { urls: string[] }) {
-  // Fill to exactly 6 slots
   const cells = Array.from({ length: 6 }, (_, i) => urls[i % urls.length]);
   return (
     <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gridTemplateRows: "repeat(2, 1fr)" }}>
@@ -200,6 +199,11 @@ function PhotoGrid({ urls }: { urls: string[] }) {
         <div key={i} style={{ overflow: "hidden", position: "relative" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          {/* Vignette — hides hard seams between cells */}
+          <div style={{
+            position: "absolute", inset: 0,
+            boxShadow: "inset 0 0 70px 35px rgba(5,4,15,0.95)",
+          }} />
         </div>
       ))}
     </div>

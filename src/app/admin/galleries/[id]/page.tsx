@@ -461,6 +461,44 @@ export default function GalleryAdminPage() {
         </div>
       )}
 
+      {/* ── TOP PHOTOS ANALYTICS ── */}
+      {gallery.photos.length >= 3 && (() => {
+        const byLikes     = [...gallery.photos].sort((a, b) => ((b as any)._count?.likes ?? 0) - ((a as any)._count?.likes ?? 0)).slice(0, 3);
+        const byDownloads = [...gallery.photos].sort((a, b) => (b as any).downloadCount - (a as any).downloadCount).slice(0, 3);
+        const hasLikes     = (byLikes[0]     as any)._count?.likes     > 0;
+        const hasDownloads = (byDownloads[0] as any).downloadCount     > 0;
+        if (!hasLikes && !hasDownloads) return null;
+        return (
+          <div style={{ marginTop: 32 }}>
+            <p style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-inter)", marginBottom: 14, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              Top Fotos
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+              {hasLikes && (
+                <TopPhotoBlock
+                  title="Meist geliked"
+                  icon={<HeartStatIcon />}
+                  color="#C084FC"
+                  photos={byLikes}
+                  getValue={p => (p as any)._count?.likes ?? 0}
+                  label="Likes"
+                />
+              )}
+              {hasDownloads && (
+                <TopPhotoBlock
+                  title="Meist heruntergeladen"
+                  icon={<DownloadStatIcon2 />}
+                  color="var(--accent-lt)"
+                  photos={byDownloads}
+                  getValue={p => (p as any).downloadCount ?? 0}
+                  label="Downloads"
+                />
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       <style>{`
         .name-group:hover .edit-btn { opacity: 1 !important; }
         .photo-thumb:hover .photo-overlay { opacity: 1 !important; }
@@ -471,6 +509,45 @@ export default function GalleryAdminPage() {
     </div>
   );
 }
+
+function TopPhotoBlock({ title, icon, color, photos, getValue, label }: {
+  title: string; icon: React.ReactNode; color: string;
+  photos: any[]; getValue: (p: any) => number; label: string;
+}) {
+  const MEDALS = ["🥇", "🥈", "🥉"];
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "16px 16px 12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
+        <span style={{ color }}>{icon}</span>
+        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-2)", fontFamily: "var(--font-inter)" }}>{title}</span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {photos.map((photo, i) => {
+          const val = getValue(photo);
+          if (val === 0) return null;
+          return (
+            <div key={photo.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 16, flexShrink: 0, width: 22 }}>{MEDALS[i]}</span>
+              <div style={{ width: 40, height: 40, borderRadius: 8, overflow: "hidden", flexShrink: 0, border: "1px solid var(--border)" }}>
+                <img src={getPublicUrl(photo.previewKey)} alt={photo.filename} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 11, color: "var(--text-2)", fontFamily: "var(--font-inter)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{photo.filename}</p>
+              </div>
+              <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 600, color, fontFamily: "var(--font-inter)" }}>
+                {val}
+                <span style={{ fontSize: 10, fontWeight: 400, color: "var(--text-3)" }}>{label}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HeartStatIcon()    { return <svg width="14" height="14" viewBox="0 0 17 17" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5S2 10.3 2 5.8a3.8 3.8 0 0 1 6.5-2.7A3.8 3.8 0 0 1 15 5.8c0 4.5-6.5 8.7-6.5 8.7z"/></svg>; }
+function DownloadStatIcon2(){ return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v9M5 8l3 3 3-3"/><path d="M2.5 13.5h11"/></svg>; }
 
 function ActionBtn({ onClick, label, primary }: { onClick: () => void; label: string; primary?: boolean }) {
   return (

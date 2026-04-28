@@ -10,7 +10,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const { id } = await params;
   const gallery = await prisma.gallery.findUnique({
     where: { id },
-    include: { photos: { orderBy: { sortOrder: "asc" } } },
+    include: {
+      photos: {
+        orderBy: { sortOrder: "asc" },
+        include: { _count: { select: { likes: true } } },
+      },
+    },
   });
 
   if (!gallery) return NextResponse.json({ error: "Not found" }, { status: 404 });
